@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #define DIM 2
-#define DIM_PACCHETTO 64
+#define DIM_PACCHETTO 32
 
 const char* ssid = "Tello-APuntocaldo";
 const char* password = "capebomb";
