@@ -16,8 +16,8 @@ const IPAddress controller_ip(192, 168, 4, 2);
 const int controller_port = 58203;
 const IPAddress tello_ips[DIM] = {IPAddress(192, 168, 4, 3), IPAddress(192, 168, 4, 4)};
 const int tello_port = 8889; //Porta UDP del Tello
-char incomingPacket[DIM_PACCHETTO];
-char responsePacket[DIM_PACCHETTO];
+char incoming_packet[DIM_PACCHETTO];
+char response_packet[DIM_PACCHETTO];
 
 WiFiUDP udp;
 
@@ -44,22 +44,22 @@ void setup() {
 }
 
 void loop() {
-  int packetSize = udp.parsePacket();
-  if (packetSize) {
+  int packet_size = udp.parsePacket();
+  if (packet_size) {
     //ricevi il comando
-    udp.read(incomingPacket, DIM_PACCHETTO);
+    udp.read(incoming_packet, DIM_PACCHETTO);
 
     //termina la stringa
-    incomingPacket[packetSize] = '\0';
-    Serial.printf("Contenuto del pacchetto: %s\n", incomingPacket);
+    incoming_packet[packet_size] = '\0';
+    Serial.printf("Contenuto del pacchetto: %s\n", incoming_packet);
 
     bool is_drone = false;
     //forward al controller dei messaggi dei droni
     for(int i = 0; i < DIM; i++) {
       if (udp.remoteIP() == tello_ips[i]) {
         udp.beginPacket(controller_ip, controller_port);
-        sprintf(responsePacket, "%d: %s", i, incomingPacket);
-        udp.write(responsePacket);
+        sprintf(response_packet, "%d: %s", i, incoming_packet);
+        udp.write(response_packet);
         udp.endPacket();
         is_drone = true;
         break;
@@ -70,7 +70,7 @@ void loop() {
       //invia il comando ai droni
       for(int i = 0; i < DIM; i++){
         udp.beginPacket(tello_ips[i], tello_port);
-        udp.write(incomingPacket);
+        udp.write(incoming_packet);
         udp.endPacket();
       }
     }
