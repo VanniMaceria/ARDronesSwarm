@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UdpSender : MonoBehaviour
 {
@@ -23,14 +24,14 @@ public class UdpSender : MonoBehaviour
     }
 
     // Metodo da chiamare al clic sul pannello
-    public void SendCommandByPanel(GameObject panel)
+    public void SendCommandByPanel(Button button)
     {
         try
         {
             string command = "";
 
             // Determina il comando in base al tag del pannello
-            switch (panel.tag)
+            switch (button.gameObject.tag)
             {
                 case "command":
                     command = "command"; // Attiva modalità SDK
@@ -45,7 +46,7 @@ public class UdpSender : MonoBehaviour
                     break;
 
                 default:
-                    Debug.LogError($"Tag sconosciuto: {panel.tag}");
+                    Debug.LogError($"Tag sconosciuto: {button.gameObject.tag}");
                     return;
             }
 
