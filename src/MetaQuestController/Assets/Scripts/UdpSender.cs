@@ -1,4 +1,3 @@
-using System;
 using System.Net.Sockets;
 using System.Text;
 using UnityEngine;
@@ -7,13 +6,15 @@ using UnityEngine.InputSystem;
 
 public class UdpSender : MonoBehaviour
 {
-    [Header("UDP Settings")]
-    public string espIp = "192.168.4.1"; // IP dell'Access Point dell'ESP8266
-    public int espPort = 8889;          // Porta UDP dell'ESP8266
+    private const string EspIp = "192.168.4.1"; // IP dell'Access Point dell'ESP8266
+    private const int EspPort = 8889; // Porta UDP dell'ESP8266
+    
+    private const float SendInterval = 0.05f; // Intervallo tra i pacchetti (50 ms)
 
-    private UdpClient udpClient;
-    private float sendInterval = 0.1f; // Intervallo tra i pacchetti (100 ms)
-    private float lastSendTime = 0f;
+    private UdpClient _udpClient;
+    private float _lastSendTime;
+    
+    private bool _isFlying;
 
     [Header("XR Input Actions")]
     public InputActionProperty takeoffAction;  // Azione di decollo
@@ -21,69 +22,71 @@ public class UdpSender : MonoBehaviour
     public InputActionProperty moveAction;     // Azione di movimento sx dx up down (analogico destro)
     public InputActionProperty secondaryMoveAction; //Azione di movimento sopra/sotto e rotazione sul proprio asse (analogico sinistro)
 
-    private bool isFlying = false;
-
-    void Start()
+    private void Start()
     {
-        udpClient = new UdpClient();
+        _udpClient = new UdpClient();
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         // Abilita le azioni di input
         takeoffAction.action.Enable();
         landAction.action.Enable();
         moveAction.action.Enable();
+        secondaryMoveAction.action.Enable();
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         // Disabilita le azioni di input
         takeoffAction.action.Disable();
         landAction.action.Disable();
         moveAction.action.Disable();
+        secondaryMoveAction.action.Disable();
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
-        udpClient?.Close();
+        _udpClient?.Close();
     }
 
-    void Update()
+    private void Update()
     {
         // Gestione del decollo
         if (takeoffAction.action.triggered)
         {
             SendCommand("takeoff");
-            isFlying = true;
+            _isFlying = true;
         }
 
         // Gestione dell'atterraggio
         if (landAction.action.triggered)
         {
             SendCommand("land");
-            isFlying = false;
+            _isFlying = false;
         }
 
-        if (Time.time - lastSendTime > sendInterval)
+        if (Time.time - _lastSendTime > SendInterval)
         {
-            if (isFlying)
+            if (_isFlying)
             {
                 // Gestione del movimento con l'analogico destro
                 Vector2 moveInput = moveAction.action.ReadValue<Vector2>();
                 Vector2 secondaryMoveInput = secondaryMoveAction.action.ReadValue<Vector2>();
 
-                float y = moveInput.y > 0.1f ? moveInput.y : 0.0f;  // Movimento avanti/indietro
-                float x = moveInput.x > 0.1f ? moveInput.x : 0.0f;    // Movimento destra/sinistra
-                float z = secondaryMoveInput.y > 0.1f ? secondaryMoveInput.y : 0.0f; // Movimento su/gi˘
-                float rotation = secondaryMoveInput.x > 0.1f ? secondaryMoveInput.x : 0.0f; //Rotazione
+                float y = moveInput.y;  // Movimento avanti/indietro
+                float x = moveInput.x;    // Movimento destra/sinistra
+                float z = secondaryMoveInput.y; // Movimento su/gi√π
+                float rotation = secondaryMoveInput.x; //Rotazione
 
                 // Comando di movimento per il drone (SDK specifico)
-                string movementCommand = $"rc {Mathf.RoundToInt(x * 100)} {Mathf.RoundToInt(y * 100)} {Mathf.RoundToInt(z * 100)} {Mathf.RoundToInt(rotation * 100)}";
+                string movementCommand = 
+                    $"rc {Mathf.RoundToInt(x * 100)} {Mathf.RoundToInt(y * 100)} {Mathf.RoundToInt(z * 100)} {Mathf.RoundToInt(rotation * 100)}";
+                
                 SendCommand(movementCommand);
             }
 
-            lastSendTime = Time.time;
+            _lastSendTime = Time.time;
         }
     }
 
@@ -95,16 +98,7 @@ public class UdpSender : MonoBehaviour
 
     private void SendCommand(string command)
     {
-        try
-        {
-            byte[] data = Encoding.UTF8.GetBytes(command);
-            udpClient.Send(data, data.Length, espIp, espPort);
-
-            Debug.Log($"Messaggio inviato a {espIp}:{espPort}: {command}");
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Errore durante l'invio del messaggio UDP: {ex.Message}");
-        }
+        byte[] data = Encoding.UTF8.GetBytes(command);
+        _udpClient.Send(data, data.Length, EspIp, EspPort);
     }
 }

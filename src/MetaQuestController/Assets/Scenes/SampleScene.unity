@@ -1316,8 +1316,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46993d4982ef0084da8bbd19d66dcc0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  espIp: 192.168.4.1
-  espPort: 8889
   takeoffAction:
     m_UseReference: 0
     m_Action:
@@ -1856,6 +1854,7 @@ GameObject:
   - component: {fileID: 1917893856}
   - component: {fileID: 1917893855}
   - component: {fileID: 1917893859}
+  - component: {fileID: 1917893860}
   m_Layer: 5
   m_Name: Status Bar
   m_TagString: Untagged
@@ -1965,6 +1964,20 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RaycastTriggerInteraction: 1
+--- !u!114 &1917893860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1917893854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03fd601cca961af489f2474f8f8609b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 994335303}
+  offset: {x: 0, y: -1.35, z: 7}
 --- !u!1 &1953389872
 GameObject:
   m_ObjectHideFlags: 0
