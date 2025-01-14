@@ -12,4 +12,10 @@ The system is designed following the three-layer IoT architecture: Sensor Layer,
 3. **Application layer: Meta Quest application**
    - Provides a user-friendly interface to control the drone swarm;
    - Transmits commands to the ESP8266 module via a wireless connection.
-   
+
+## Contributors
+<a href="https://github.com/VanniMaceria/Progetto-LabIoT/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=VanniMaceria/Progetto-LabIoT" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
