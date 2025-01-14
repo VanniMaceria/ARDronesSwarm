@@ -13,7 +13,8 @@ const char* ssid = "Tello-APuntocaldo";
 const char* password = "capebomb";
 
 const IPAddress controller_ip(192, 168, 4, 2);
-const int controller_port = 58203;
+const IPAddress logger_ip(192, 168, 4, 5);
+const int controllogger_port = 58203; //porta destinata al MetaQuest e il server di Node-Red
 const IPAddress tello_ips[DIM] = {IPAddress(192, 168, 4, 3), IPAddress(192, 168, 4, 4)};
 const int tello_port = 8889; //Porta UDP del Tello
 char incoming_packet[DIM_PACCHETTO];
@@ -57,10 +58,16 @@ void loop() {
     //forward al controller dei messaggi dei droni
     for(int i = 0; i < DIM; i++) {
       if (udp.remoteIP() == tello_ips[i]) {
-        udp.beginPacket(controller_ip, controller_port);
         sprintf(response_packet, "%d: %s", i, incoming_packet);
+
+        udp.beginPacket(controller_ip, controllogger_port);
         udp.write(response_packet);
         udp.endPacket();
+
+        udp.beginPacket(logger_ip, controllogger_port);
+        udp.write(response_packet);
+        udp.endPacket();
+        
         is_drone = true;
         break;
       }
