@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using UnityEngine;
 
 public class UdpReceiver : MonoBehaviour
@@ -11,59 +10,59 @@ public class UdpReceiver : MonoBehaviour
     private const int port = 58203; // Porta su cui ricevere i pacchetti UDP
 
     private UdpClient _udpClient;
-    private Thread _receiveThread;  //serve a non bloccare il Thread principale della scena Unity
-    private bool _isRunning;
+    private IPEndPoint _remoteEndPoint;
+
+    [Header("Drones UI")]
+    public GameObject[] icons;
+    public GameObject[] batteries;
+    public GameObject[] speeds;
+    public GameObject[] wifiSignals;
 
     void Start()
     {
         _udpClient = new UdpClient(port); // Bind della porta
-        _isRunning = true;
-        _receiveThread = new Thread(ReceiveData);
-        _receiveThread.IsBackground = true; // Il thread si chiude automaticamente con l'applicazione
-        _receiveThread.Start();
+        _udpClient.Client.Blocking = false; // Imposta il socket in modalità non bloccante
+        _remoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // Qualsiasi IP e porta per la ricezione iniziale
 
         Debug.Log($"UDP Receiver started on port {port}");
     }
 
-    private void ReceiveData()
+    void Update()
     {
-        IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // Qualsiasi IP e porta per la ricezione iniziale
-
-        while (_isRunning)
+        try
         {
-            try
+            if (_udpClient.Available > 0) // Controlla se ci sono dati disponibili
             {
-                // Ricevi pacchetti UDP
-                byte[] receiveBytes = _udpClient.Receive(ref remoteEndPoint); // Popola remoteEndPoint con i dettagli del mittente
-
-                // Controlla che il mittente sia l'IP specificato
-                if (remoteEndPoint.Address.Equals(EspIp)) // Confronta con IP specifico
+                byte[] receiveBytes = _udpClient.Receive(ref _remoteEndPoint); // Riceve i dati
+                if (_remoteEndPoint.Address.Equals(EspIp)) // Confronta con l'IP specifico
                 {
                     string returnData = Encoding.ASCII.GetString(receiveBytes);
                     Debug.Log($"Messaggio ricevuto: {returnData}");
-                    Debug.Log($"Da: {remoteEndPoint.Address}:{remoteEndPoint.Port}");
+                    Debug.Log($"Da: {_remoteEndPoint.Address}:{_remoteEndPoint.Port}");
                 }
                 else
                 {
-                    Debug.LogWarning($"Pacchetto scartato da {remoteEndPoint.Address}:{remoteEndPoint.Port}");
+                    Debug.LogWarning($"Pacchetto scartato da {_remoteEndPoint.Address}:{_remoteEndPoint.Port}");
                 }
             }
-            catch (Exception e)
+        }
+        catch (SocketException socketException)
+        {
+            // Ignora l'errore "Would block" in modalità non bloccante
+            if (socketException.SocketErrorCode != SocketError.WouldBlock)
             {
-                Debug.LogError($"Errore UDP: {e.Message}");
+                Debug.LogError($"Errore UDP: {socketException.Message}");
             }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Errore generico UDP: {e.Message}");
         }
     }
 
-
     void OnApplicationQuit()
     {
-        _isRunning = false;
         _udpClient.Close();
-        if (_receiveThread != null && _receiveThread.IsAlive)
-        {
-            _receiveThread.Abort();
-        }
         Debug.Log("UDP Receiver stopped.");
     }
 }
