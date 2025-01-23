@@ -12,8 +12,8 @@
 const char* ssid = "Tello-APuntocaldo";
 const char* password = "capebomb";
 
-const char* controller_mac = "";
-const char* logger_mac = "";
+const char* controller_mac = "28:39:26:e7:e0:03"; // mac quest 16:dd:e1:9c:98:d8
+const char* logger_mac = "d2:c5:e2:11:01:22";
 const char* tello_macs[NUM_DRONI] = {"48:1c:b9:e9:24:0e", "48:1c:b9:e9:24:06"};
 
 const int controllogger_port = 58203; //porta di comunicazione col MetaQuest e col server di Node-Red
@@ -81,6 +81,7 @@ void loop() {
 // Funzione per ricevere dei comandi dal controller e inoltrarli ai droni
 void receiveCommand() {
   if (readPacket(udp_controllogger)) {
+    Serial.println(incoming_packet);
     //invia il comando ai droni
     for(int i = 0; i < NUM_DRONI; i++) {
       sendPacket(udp_tello, tello_ips[i], tello_port, incoming_packet);
@@ -91,6 +92,7 @@ void receiveCommand() {
 // Funzione per ricevere pacchetti di risposta dai droni e inoltrarli al controller e al logger
 void receiveResponse(WiFiUDP& udp, const char* info) {
   if (readPacket(udp)) {
+    Serial.println(incoming_packet);
     //forward al controller e al logger delle risposte dei droni
     for(int i = 0; i < NUM_DRONI; i++) {
       if (udp.remoteIP() == tello_ips[i]) {
@@ -102,6 +104,7 @@ void receiveResponse(WiFiUDP& udp, const char* info) {
           sprintf(response_packet, "%d: %s %s", i, info, incoming_packet);
         }
 
+        Serial.println(response_packet);
         sendPacket(udp_controllogger, controller_ip, controllogger_port, response_packet);
         sendPacket(udp_controllogger, logger_ip, controllogger_port, response_packet);
         
@@ -131,9 +134,7 @@ void sendInfoRequest() {
 void updateConnectedDevices() {
   int new_connected_devices = wifi_softap_get_station_num();
   if (new_connected_devices != connected_devices) {
-    Serial.println("Dispositivi connessi aggiornati");
-
-    connected_devices = new_connected_devices;
+    connected_devices = 0;
 
     //azzero tutti gli ip impostati in precedenza
     controller_ip = IPAddress();
@@ -145,10 +146,23 @@ void updateConnectedDevices() {
     //restituisce la lista dei dispositivi connessi all'ESP
     struct station_info* stationList = wifi_softap_get_station_info();
 
+    if (stationList == NULL) {
+      if (new_connected_devices == 0) {
+        Serial.println("Dispositivi connessi aggiornati");
+        Serial.println("Nessun dispositivo connesso trovato.");
+      }
+      wifi_softap_free_station_info();  //dealloca la lista dei dispositivi connessi all'ESP
+      return;
+    }
+
+    String macs[new_connected_devices];
+    IPAddress ips[new_connected_devices];
     while (stationList != NULL) {
       String mac = macToString(stationList->bssid);
       IPAddress ip = IPAddress((uint32_t)stationList->ip.addr);
-      Serial.printf("Dispositivo connesso - MAC: %s, IP: %s\n", mac.c_str(), ip.toString().c_str());
+
+      macs[connected_devices] = mac;
+      ips[connected_devices] = ip;
 
       if (mac.equalsIgnoreCase(controller_mac)) {
         controller_ip = ip;
@@ -162,7 +176,15 @@ void updateConnectedDevices() {
         }
       }
 
+      connected_devices++;
       stationList = STAILQ_NEXT(stationList, next);
+    }
+
+    if (new_connected_devices == connected_devices) {
+      Serial.println("Dispositivi connessi aggiornati");
+      for (int i = 0; i < connected_devices; i++) {
+        Serial.printf("Dispositivo connesso - MAC: %s, IP: %s\n", macs[i].c_str(), ips[i].toString().c_str());
+      }
     }
 
     wifi_softap_free_station_info();  //dealloca la lista dei dispositivi connessi all'ESP
@@ -171,6 +193,8 @@ void updateConnectedDevices() {
 
 // Funzione per convertire il MAC address in stringa
 String macToString(const uint8_t* mac) {
+  if (mac == nullptr) return String("00:00:00:00:00:00");
+
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", 
            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
