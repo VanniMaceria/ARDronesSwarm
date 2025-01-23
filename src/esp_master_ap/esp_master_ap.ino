@@ -96,7 +96,7 @@ void receiveResponse(WiFiUDP& udp, const char* info) {
     //forward al controller e al logger delle risposte dei droni
     for(int i = 0; i < NUM_DRONI; i++) {
       if (udp.remoteIP() == tello_ips[i]) {
-        if (udp == udp_tello) {
+        if (udp.localPort() == udp_tello.localPort()) {
           //risposta dei droni sulle azioni standard (command, takeoff, land, etc.)
           sprintf(response_packet, "%d: %s", i, incoming_packet);
         } else {
