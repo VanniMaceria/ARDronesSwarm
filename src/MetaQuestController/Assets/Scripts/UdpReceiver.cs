@@ -8,7 +8,6 @@ using TMPro;
 
 public class UdpReceiver : MonoBehaviour
 {
-    private readonly IPAddress EspIp = IPAddress.Parse("192.168.4.1"); // IP dell'Access Point dell'ESP8266
     private const int port = 58203; // Porta su cui ricevere i pacchetti UDP
 
     private UdpClient _udpClient;
@@ -19,8 +18,7 @@ public class UdpReceiver : MonoBehaviour
     public TextMeshProUGUI[] timesOfFly;
     public Image[] droneSprites;
     public Image sdkSprite;
-
-    private bool[] isSDK;
+    public Image errorSprite;
 
     void Start()
     {
@@ -29,9 +27,6 @@ public class UdpReceiver : MonoBehaviour
         _remoteEndPoint = new IPEndPoint(IPAddress.Any, 0); // Qualsiasi IP e porta per la ricezione iniziale
 
         Debug.Log($"UDP Receiver started on port {port}");
-
-        // Inizializza l'array isSDK con la stessa lunghezza di dronesSprite
-        isSDK = new bool[droneSprites.Length];
 
         // Controlla che tutti i riferimenti siano impostati
         for (int i = 0; i < droneSprites.Length; i++)
@@ -50,20 +45,21 @@ public class UdpReceiver : MonoBehaviour
             if (_udpClient.Available > 0) // Controlla se ci sono dati disponibili
             {
                 byte[] receiveBytes = _udpClient.Receive(ref _remoteEndPoint); // Riceve i dati
-                if (_remoteEndPoint.Address.Equals(EspIp)) // Confronta con l'IP dell'Esp
-                {
-                    string returnData = Encoding.ASCII.GetString(receiveBytes);
-                    Debug.Log($"Messaggio ricevuto: {returnData}");
-                    Debug.Log($"Da: {_remoteEndPoint.Address}:{_remoteEndPoint.Port}");
+                
+                string returnData = Encoding.ASCII.GetString(receiveBytes);
+                Debug.Log($"Messaggio ricevuto: {returnData}");
+                //Debug.Log($"Da: {_remoteEndPoint.Address}:{_remoteEndPoint.Port}");
 
-                    // Aggiorna lo stato delle immagini e delle info sui droni
-                    UpdateDronesUI(returnData);
-                    UpdateDronePanels(returnData);
-                }
-                else
-                {
-                    Debug.LogWarning($"Pacchetto scartato da {_remoteEndPoint.Address}:{_remoteEndPoint.Port}");
-                }
+                //prendo l'indice del drone che ha mandato il messaggio
+                int index = int.Parse(returnData[0].ToString());
+                //estrapolo solo la risposta del drone
+                string responseMessage = returnData.Substring(3);
+
+                //Debug.Log($"Drone {index} risponde {responseMessage}");
+
+                // Aggiorna lo stato delle immagini e delle info sui droni
+                UpdateDronesUI(index, responseMessage);
+                UpdateDronePanels(index, responseMessage);
             }
         }
         catch (SocketException socketException)
@@ -85,63 +81,41 @@ public class UdpReceiver : MonoBehaviour
         Debug.Log("UDP Receiver stopped.");
     }
 
-    void UpdateDronesUI(string response)
+    void UpdateDronesUI(int droneIndex, string response)
     {
-        for (int i = 0; i < droneSprites.Length; i++)
+        switch (response)
         {
-            // Salta il controllo se il drone è già in modalità SDK
-            if (isSDK[i]) continue;
-
-            // Controlla la modalità SDK solo per il drone corrente
-            isSDK[i] = CheckSDK(response, i);
-            if (isSDK[i] && droneSprites[i] != null)
-            {
-                droneSprites[i].sprite = sdkSprite.sprite;
-                Debug.Log($"Drone {i} aggiornato in modalità SDK.");
-            }
+            case "ok":
+                droneSprites[droneIndex].sprite = sdkSprite.sprite;
+                break;
+            case "error":
+                droneSprites[droneIndex].sprite = errorSprite.sprite;
+                break;
+            default:
+                break;
         }
     }
 
-
-    bool CheckSDK(string response, int index)
+    void UpdateDronePanels(int droneIndex, string response)
     {
-        // Crea il messaggio atteso per il drone con indice specifico
-        string expectedResponse = $"{index}: ok";
-        return response == expectedResponse;
-    }
+        //time 10s
+        //battery 50
 
-
-    void UpdateDronePanels(string response)
-    {
-        // Cerca se il messaggio contiene "time"
         if (response.Contains("time"))
         {
-            for (int i = 0; i < timesOfFly.Length; i++)
-            {
-                if (response.Contains($"{i}:"))
-                {
-                    string timeData = response.Substring(response.IndexOf("time") + 5).Trim(); // Estrai i dati dopo "time"
-                    timesOfFly[i].text = timeData;
-                    Debug.Log($"Aggiornato tempo di volo per drone {i}: {timeData}");
-                    break; // Interrompe il ciclo una volta trovato il drone
-                }
-            }
+            //estrai solo il valore
+            response = response.Substring(4, response.Length - 1);
+            timesOfFly[droneIndex].text = response;
+    
         }
-
-        // Cerca se il messaggio contiene "battery"
-        if (response.Contains("battery"))
+        else if (response.Contains("battery"))
         {
-            for (int i = 0; i < batteries.Length; i++)
-            {
-                if (response.Contains($"{i}:"))
-                {
-                    string batteryData = response.Substring(response.IndexOf("battery") + 8).Trim(); // Estrai i dati dopo "battery"
-                    batteries[i].text = batteryData;
-                    Debug.Log($"Aggiornato livello batteria per drone {i}: {batteryData}");
-                    break; // Interrompe il ciclo una volta trovato il drone
-                }
-            }
+            //estrai solo il valore
+            response = response.Substring(7, response.Length - 1);
+            batteries[droneIndex].text = response + "%";
+            
         }
     }
+
 
 }

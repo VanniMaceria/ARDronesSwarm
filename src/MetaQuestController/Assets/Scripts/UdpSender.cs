@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 public class UdpSender : MonoBehaviour
 {
     private const string EspIp = "192.168.4.1"; // IP dell'Access Point dell'ESP8266
-    private const int EspPort = 8889; // Porta UDP dell'ESP8266
+    private const int EspPort = 58203; // Porta UDP dell'ESP8266
     
     private const float SendInterval = 0.05f; // Intervallo tra i pacchetti (50 ms)
 
