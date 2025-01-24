@@ -18,7 +18,7 @@ const char* tello_macs[NUM_DRONI] = {"48:1c:b9:e9:24:0e", "48:1c:b9:e9:24:06"};
 
 const int controllogger_port = 58203; //porta di comunicazione col MetaQuest e col server di Node-Red
 const int tello_port = 8889; //porta per la comunicazione col Tello
-const int battery_port = 8890; //porta per la comunicazione della percentuale di batteria
+const int battery_port = 8892; //porta per la comunicazione della percentuale di batteria
 const int time_port = 8891; //porta per la comunicazione del tempo di volo
 
 const unsigned long infos_interval = 2000; // Intervallo per la richiesta delle informazioni di stato (2000 millisecondi)
