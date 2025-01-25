@@ -16,10 +16,10 @@ const char* controller_mac = "28:39:26:e7:e0:03"; // mac quest 16:dd:e1:9c:98:d8
 const char* logger_mac = "d2:c5:e2:11:01:22";
 const char* tello_macs[NUM_DRONI] = {"48:1c:b9:e9:24:0e", "48:1c:b9:e9:24:06"};
 
-const int controllogger_port = 58203; //porta di comunicazione col MetaQuest e col server di Node-Red
-const int tello_port = 8889; //porta per la comunicazione col Tello
-const int battery_port = 8892; //porta per la comunicazione della percentuale di batteria
-const int time_port = 8891; //porta per la comunicazione del tempo di volo
+const uint16_t controllogger_port = 58203; //porta di comunicazione col MetaQuest e col server di Node-Red
+const uint16_t tello_port = 8889; //porta per la comunicazione col Tello
+const uint16_t battery_port = 8892; //porta per la comunicazione della percentuale di batteria
+const uint16_t time_port = 8891; //porta per la comunicazione del tempo di volo
 
 const unsigned long infos_interval = 2000; // Intervallo per la richiesta delle informazioni di stato (2000 millisecondi)
 
@@ -28,7 +28,7 @@ char response_packet[DIM_PACCHETTO]; // buffer di invio
 
 unsigned long last_time_infos = 0;  // Memorizza l'ultimo istante in cui sono state richieste le informazioni di stato
 
-int connected_devices = 0;
+uint8 connected_devices = 0;
 
 IPAddress controller_ip;
 IPAddress logger_ip;
@@ -54,7 +54,7 @@ void setup() {
   Serial.println(ip);
 
   // Recupera la modalità corrente
-  uint8_t phyMode = WiFi.getPhyMode();
+  WiFiPhyMode_t phyMode = WiFi.getPhyMode();
   Serial.print("Current PHY mode: ");
   if (phyMode == WIFI_PHY_MODE_11B) Serial.println("802.11b");
   else if (phyMode == WIFI_PHY_MODE_11G) Serial.println("802.11g");
@@ -70,8 +70,8 @@ void setup() {
 void loop() {
   receiveCommand();
   receiveResponse(udp_tello);
-  receiveResponse(udp_battery, "battery");
-  receiveResponse(udp_time, "time");
+  receiveResponse(udp_battery, "battery ");
+  receiveResponse(udp_time, "time ");
 
   sendInfoRequest();
 
@@ -81,7 +81,6 @@ void loop() {
 // Funzione per ricevere dei comandi dal controller e inoltrarli ai droni
 void receiveCommand() {
   if (readPacket(udp_controllogger)) {
-    Serial.println(incoming_packet);
     //invia il comando ai droni
     for(int i = 0; i < NUM_DRONI; i++) {
       sendPacket(udp_tello, tello_ips[i], tello_port, incoming_packet);
@@ -92,19 +91,12 @@ void receiveCommand() {
 // Funzione per ricevere pacchetti di risposta dai droni e inoltrarli al controller e al logger
 void receiveResponse(WiFiUDP& udp, const char* info) {
   if (readPacket(udp)) {
-    Serial.println(incoming_packet);
-    //forward al controller e al logger delle risposte dei droni
+    // forward al controller e al logger delle risposte dei droni
     for(int i = 0; i < NUM_DRONI; i++) {
+      // trova il drone che ha inviato la risposta, per sapere il suo id (indice)
       if (udp.remoteIP() == tello_ips[i]) {
-        if (udp.localPort() == udp_tello.localPort()) {
-          //risposta dei droni sulle azioni standard (command, takeoff, land, etc.)
-          sprintf(response_packet, "%d: %s", i, incoming_packet);
-        } else {
-          //risposta dei droni sulle informazioni (battery e time)
-          sprintf(response_packet, "%d: %s %s", i, info, incoming_packet);
-        }
+        sprintf(response_packet, "%d: %s%s", i, info, incoming_packet);
 
-        Serial.println(response_packet);
         sendPacket(udp_controllogger, controller_ip, controllogger_port, response_packet);
         sendPacket(udp_controllogger, logger_ip, controllogger_port, response_packet);
         
@@ -132,69 +124,68 @@ void sendInfoRequest() {
 
 // Funzione per aggiornare gli IP dei dispositivi connessi, vengono riconosciuti in base ai mac
 void updateConnectedDevices() {
-  int new_connected_devices = wifi_softap_get_station_num();
-  if (new_connected_devices != connected_devices) {
-    connected_devices = 0;
+  uint8 new_connected_devices = wifi_softap_get_station_num();
 
-    //azzero tutti gli ip impostati in precedenza
-    controller_ip = IPAddress();
-    logger_ip = IPAddress();
-    for (int i = 0; i < NUM_DRONI; i++) {
-      tello_ips[i] = IPAddress();
-    }
+  // Se il numero di dispositivi connessi non è cambiato non c'è bisogno di fare nulla
+  if (new_connected_devices == connected_devices) return;
 
-    //restituisce la lista dei dispositivi connessi all'ESP
-    struct station_info* stationList = wifi_softap_get_station_info();
+  connected_devices = 0;
 
-    if (stationList == NULL) {
-      if (new_connected_devices == 0) {
-        Serial.println("Dispositivi connessi aggiornati");
-        Serial.println("Nessun dispositivo connesso trovato.");
-      }
-      wifi_softap_free_station_info();  //dealloca la lista dei dispositivi connessi all'ESP
-      return;
-    }
+  //azzero tutti gli ip impostati in precedenza
+  controller_ip = IPAddress();
+  logger_ip = IPAddress();
+  for (int i = 0; i < NUM_DRONI; i++) {
+    tello_ips[i] = IPAddress();
+  }
 
-    String macs[new_connected_devices];
-    IPAddress ips[new_connected_devices];
-    while (stationList != NULL) {
-      String mac = macToString(stationList->bssid);
-      IPAddress ip = IPAddress((uint32_t)stationList->ip.addr);
+  //restituisce la lista dei dispositivi connessi all'ESP
+  struct station_info* stationList = wifi_softap_get_station_info();
 
-      macs[connected_devices] = mac;
-      ips[connected_devices] = ip;
+  // Array per memorizzare i dispositivi connessi e stamparli successivamente
+  String macs[new_connected_devices];
+  IPAddress ips[new_connected_devices];
 
-      if (mac.equalsIgnoreCase(controller_mac)) {
-        controller_ip = ip;
-      } else if (mac.equalsIgnoreCase(logger_mac)) {
-        logger_ip = ip;
-      } else {
-        for (int i = 0; i < NUM_DRONI; i++) {
-          if (mac.equalsIgnoreCase(tello_macs[i])) {
-            tello_ips[i] = ip;
-          }
+  // Scorro la lista, aggiornando gli ip in base ai mac e aggiornando il numero di dispositivi effettivamente rilevati
+  while (stationList != NULL) {
+    String mac = macToString(stationList->bssid);
+    IPAddress ip = IPAddress((uint32_t)stationList->ip.addr);
+
+    macs[connected_devices] = mac;
+    ips[connected_devices] = ip;
+
+    if (mac.equalsIgnoreCase(controller_mac)) {
+      controller_ip = ip;
+    } else if (mac.equalsIgnoreCase(logger_mac)) {
+      logger_ip = ip;
+    } else {
+      for (int i = 0; i < NUM_DRONI; i++) {
+        if (mac.equalsIgnoreCase(tello_macs[i])) {
+          tello_ips[i] = ip;
+          break;
         }
       }
-
-      connected_devices++;
-      stationList = STAILQ_NEXT(stationList, next);
     }
 
-    if (new_connected_devices == connected_devices) {
-      Serial.println("Dispositivi connessi aggiornati");
-      for (int i = 0; i < connected_devices; i++) {
-        Serial.printf("Dispositivo connesso - MAC: %s, IP: %s\n", macs[i].c_str(), ips[i].toString().c_str());
-      }
-    }
-
-    wifi_softap_free_station_info();  //dealloca la lista dei dispositivi connessi all'ESP
+    connected_devices++;
+    stationList = STAILQ_NEXT(stationList, next);
   }
+
+  // Se arrivo a convergenza, cioè rilevo tutti i dispositivi connessi, li stampo
+  if (new_connected_devices == connected_devices) {
+    Serial.println("Dispositivi connessi aggiornati");
+    if (connected_devices == 0) {
+      Serial.println("Nessun dispositivo connesso trovato");
+    }
+    for (int i = 0; i < connected_devices; i++) {
+      Serial.printf("Dispositivo connesso - MAC: %s, IP: %s\n", macs[i].c_str(), ips[i].toString().c_str());
+    }
+  }
+
+  wifi_softap_free_station_info();  //dealloca la lista dei dispositivi connessi all'ESP
 }
 
 // Funzione per convertire il MAC address in stringa
-String macToString(const uint8_t* mac) {
-  if (mac == nullptr) return String("00:00:00:00:00:00");
-
+String macToString(const uint8* mac) {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", 
            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -203,7 +194,7 @@ String macToString(const uint8_t* mac) {
 
 /* Funzione per avviare un client udp sulla porta specificata. Stampa sul seriale
 il risultato dell'operazione*/
-void beginUDP(WiFiUDP& udp, const int port, const char* name) {
+void beginUDP(WiFiUDP& udp, const uint16_t port, const char* name) {
   if (udp.begin(port)) {
     Serial.printf("Porta %s avviata correttamente\n", name);
   } else {
@@ -212,8 +203,8 @@ void beginUDP(WiFiUDP& udp, const int port, const char* name) {
 }
 
 // Funzione per inviare un pacchetto udp
-void sendPacket(WiFiUDP& udp, const IPAddress& destination_ip, const int port, const char* message) {
-  udp.beginPacket(destination_ip, port);
+void sendPacket(WiFiUDP& udp, const IPAddress& destination_ip, const uint16_t destination_port, const char* message) {
+  udp.beginPacket(destination_ip, destination_port);
   udp.write(message);
   udp.endPacket();
 }
