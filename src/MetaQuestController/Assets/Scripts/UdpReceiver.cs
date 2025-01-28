@@ -104,14 +104,14 @@ public class UdpReceiver : MonoBehaviour
         if (response.Contains("time"))
         {
             //estrai solo il valore
-            response = response.Substring(4, response.Length - 1);
+            response = response.Substring(5);
             timesOfFly[droneIndex].text = response;
     
         }
-        else if (response.Contains("battery"))
+        else if(response.Contains("battery"))
         {
             //estrai solo il valore
-            response = response.Substring(7, response.Length - 1);
+            response = response.Substring(8);
             batteries[droneIndex].text = response + "%";
             
         }

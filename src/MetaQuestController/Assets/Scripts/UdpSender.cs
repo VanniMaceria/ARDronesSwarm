@@ -15,12 +15,14 @@ public class UdpSender : MonoBehaviour
     private float _lastSendTime;
     
     private bool _isFlying;
+    private bool _hasFlipped;
 
     [Header("XR Input Actions")]
     public InputActionProperty takeoffAction;  // Azione di decollo
     public InputActionProperty landAction;     // Azione di atterraggio
     public InputActionProperty moveAction;     // Azione di movimento sx dx up down (analogico destro)
     public InputActionProperty secondaryMoveAction; //Azione di movimento sopra/sotto e rotazione sul proprio asse (analogico sinistro)
+    public InputActionProperty flipAction;
 
     private void Start()
     {
@@ -34,6 +36,7 @@ public class UdpSender : MonoBehaviour
         landAction.action.Enable();
         moveAction.action.Enable();
         secondaryMoveAction.action.Enable();
+        flipAction.action.Enable(); 
     }
 
     private void OnDisable()
@@ -43,6 +46,7 @@ public class UdpSender : MonoBehaviour
         landAction.action.Disable();
         moveAction.action.Disable();
         secondaryMoveAction.action.Disable();
+        flipAction.action.Disable();
     }
 
     private void OnDestroy()
@@ -66,9 +70,42 @@ public class UdpSender : MonoBehaviour
             _isFlying = false;
         }
 
-        if (Time.time - _lastSendTime > SendInterval)
+        if (_isFlying)
         {
-            if (_isFlying)
+            if (flipAction.action.ReadValue<float>() > 0)
+            {
+                Vector2 secondaryMoveInput = secondaryMoveAction.action.ReadValue<Vector2>();
+
+                if (secondaryMoveInput.x == 0f && secondaryMoveInput.y == 0f)
+                {
+                    _hasFlipped = false;
+                }
+
+                if (!_hasFlipped)
+                {
+                    if (secondaryMoveInput.y > 0.8f)
+                    {
+                        SendCommand("flip f");
+                        _hasFlipped = true;
+                    }
+                    else if (secondaryMoveInput.y < -0.8f)
+                    {
+                        SendCommand("flip b");
+                        _hasFlipped = true;
+                    }
+                    else if (secondaryMoveInput.x > 0.8f)
+                    {
+                        SendCommand("flip r");
+                        _hasFlipped = true;
+                    }
+                    else if (secondaryMoveInput.x < -0.8f)
+                    {
+                        SendCommand("flip l");
+                        _hasFlipped = true;
+                    }
+                }
+            }
+            else if (Time.time - _lastSendTime > SendInterval)
             {
                 // Gestione del movimento con l'analogico destro
                 Vector2 moveInput = moveAction.action.ReadValue<Vector2>();
@@ -80,13 +117,13 @@ public class UdpSender : MonoBehaviour
                 float rotation = secondaryMoveInput.x; //Rotazione
 
                 // Comando di movimento per il drone (SDK specifico)
-                string movementCommand = 
+                string movementCommand =
                     $"rc {Mathf.RoundToInt(x * 100)} {Mathf.RoundToInt(y * 100)} {Mathf.RoundToInt(z * 100)} {Mathf.RoundToInt(rotation * 100)}";
-                
-                SendCommand(movementCommand);
-            }
 
-            _lastSendTime = Time.time;
+                SendCommand(movementCommand);
+
+                _lastSendTime = Time.time;
+            }
         }
     }
 

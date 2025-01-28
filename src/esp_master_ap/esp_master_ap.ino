@@ -12,14 +12,12 @@
 const char* ssid = "Tello-APuntocaldo";
 const char* password = "capebomb";
 
-const char* controller_mac = "28:39:26:e7:e0:03"; // mac quest 16:dd:e1:9c:98:d8
-const char* logger_mac = "d2:c5:e2:11:01:22";
+const char* controller_mac = "DE:99:8D:44:FC:CB"; // mac quest DE:99:8D:44:FC:CB  //mac pc Andrea 28:39:26:e7:e0:03
+const char* logger_mac = "1E:65:3F:59:D8:41"; //mac pc Amedeo
 const char* tello_macs[NUM_DRONI] = {"48:1c:b9:e9:24:0e", "48:1c:b9:e9:24:06"};
 
 const uint16_t controllogger_port = 58203; //porta di comunicazione col MetaQuest e col server di Node-Red
 const uint16_t tello_port = 8889; //porta per la comunicazione col Tello
-const uint16_t battery_port = 8892; //porta per la comunicazione della percentuale di batteria
-const uint16_t time_port = 8891; //porta per la comunicazione del tempo di volo
 
 const unsigned long infos_interval = 2000; // Intervallo per la richiesta delle informazioni di stato (2000 millisecondi)
 
@@ -36,10 +34,6 @@ IPAddress tello_ips[NUM_DRONI];
 
 WiFiUDP udp_controllogger;
 WiFiUDP udp_tello;
-WiFiUDP udp_battery;
-WiFiUDP udp_time;
-
-void receiveResponse(WiFiUDP& udp, const char* info = "");
 
 void setup() {
   Serial.begin(9600);
@@ -63,15 +57,11 @@ void setup() {
   // Avvia i client udp
   beginUDP(udp_controllogger, controllogger_port, "Controllogger");
   beginUDP(udp_tello, tello_port, "Tello");
-  beginUDP(udp_battery, battery_port, "Battery");
-  beginUDP(udp_time, time_port, "Time");
 }
 
 void loop() {
   receiveCommand();
-  receiveResponse(udp_tello);
-  receiveResponse(udp_battery, "battery ");
-  receiveResponse(udp_time, "time ");
+  receiveResponse();
 
   sendInfoRequest();
 
@@ -89,14 +79,25 @@ void receiveCommand() {
 }
 
 // Funzione per ricevere pacchetti di risposta dai droni e inoltrarli al controller e al logger
-void receiveResponse(WiFiUDP& udp, const char* info) {
-  if (readPacket(udp)) {
+void receiveResponse() {
+  int length = readPacket(udp_tello);
+  if (length) {
     // forward al controller e al logger delle risposte dei droni
     for(int i = 0; i < NUM_DRONI; i++) {
       // trova il drone che ha inviato la risposta, per sapere il suo id (indice)
-      if (udp.remoteIP() == tello_ips[i]) {
-        sprintf(response_packet, "%d: %s%s", i, info, incoming_packet);
+      if (udp_tello.remoteIP() == tello_ips[i]) {
+        const char* info;
 
+        if (incoming_packet[length - 1] == 's') {
+          info = "time ";
+        } else if (incoming_packet[length - 1] >= '0' && incoming_packet[length - 1] <= '9') {
+          info = "battery ";
+        } else {
+          info = "";
+        }
+
+        sprintf(response_packet, "%d: %s%s", i, info, incoming_packet);
+        
         sendPacket(udp_controllogger, controller_ip, controllogger_port, response_packet);
         sendPacket(udp_controllogger, logger_ip, controllogger_port, response_packet);
         
@@ -116,8 +117,8 @@ void sendInfoRequest() {
     last_time_infos = current_millis; // Aggiorna il tempo dell'ultima esecuzione
 
     for(int i = 0; i < NUM_DRONI; i++){
-      sendPacket(udp_battery, tello_ips[i], tello_port, "battery?");
-      sendPacket(udp_time, tello_ips[i], tello_port, "time?");
+      sendPacket(udp_tello, tello_ips[i], tello_port, "battery?");
+      sendPacket(udp_tello, tello_ips[i], tello_port, "time?");
     }
   }
 }
@@ -215,7 +216,8 @@ int readPacket(WiFiUDP& udp) {
   if (packet_size) {
     //ricevi il comando
     udp.read(incoming_packet, DIM_PACCHETTO);
-    //termina la stringa
+    //termina la stringa. Se termina con uno \r\n, allora li elimina
+    packet_size = incoming_packet[packet_size - 2] == '\r' ? packet_size - 2 : packet_size;
     incoming_packet[packet_size] = '\0';
   }
   return packet_size;
