@@ -9,9 +9,11 @@ The system is designed following the three-layer IoT architecture: Sensor Layer,
 2. **Gateway layer: ESP8266 module**
    - Acts as an Access Point to establish communication between the MetaQuest application and the drones;
    - Receives user commands from the application and relays them to the drones.
-3. **Application layer: Meta Quest application**
+3. **Application layer: Meta Quest application and Nodered interface**
    - Provides a user-friendly interface to control the drone swarm;
    - Transmits commands to the ESP8266 module via a wireless connection.
+   - Visualize all the logs.
+   - Store locally relevant info in csv about drones status.
 <p align="center">
     <img src="https://github.com/user-attachments/assets/f2e8bfa1-41a5-4a8c-be10-136be7a79af1" width=500 height=500>
 </p>
