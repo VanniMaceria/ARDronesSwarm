@@ -17,8 +17,8 @@ public class UdpReceiver : MonoBehaviour
     public TextMeshProUGUI[] batteries;
     public TextMeshProUGUI[] timesOfFly;
     public Image[] droneSprites;
-    public Image sdkSprite;
-    public Image errorSprite;
+    public Sprite sdkSprite;
+    public Sprite errorSprite;
 
     void Start()
     {
@@ -86,10 +86,10 @@ public class UdpReceiver : MonoBehaviour
         switch (response)
         {
             case "ok":
-                droneSprites[droneIndex].sprite = sdkSprite.sprite;
+                droneSprites[droneIndex].sprite = sdkSprite;
                 break;
             case "error":
-                droneSprites[droneIndex].sprite = errorSprite.sprite;
+                droneSprites[droneIndex].sprite = errorSprite;
                 break;
             default:
                 break;
@@ -112,7 +112,7 @@ public class UdpReceiver : MonoBehaviour
         {
             //estrai solo il valore
             response = response.Substring(8);
-            batteries[droneIndex].text = response + "%";
+            batteries[droneIndex].text = response;
             
         }
     }
