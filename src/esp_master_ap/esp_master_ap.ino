@@ -1,6 +1,6 @@
 //48:1c:b9:e9:24:0e MAC telloE9240E
 //48:1c:b9:e9:24:06 MAC telloE92406
-//const char* tello_ip = "192.168.10.1"; IP predefinito del Tello
+//const char *tello_ip = "192.168.10.1"; IP predefinito del Tello
 
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
@@ -9,17 +9,17 @@
 #define NUM_DRONI 2
 #define DIM_PACCHETTO 32
 
-const char* ssid = "Tello-APuntocaldo";
-const char* password = "capebomb";
+const char *SSID = "Tello-APuntocaldo";
+const char *PASSWORD = "capebomb";
 
-const char* controller_mac = "DE:99:8D:44:FC:CB"; // mac quest DE:99:8D:44:FC:CB  //mac pc Andrea 28:39:26:e7:e0:03
-const char* logger_mac = "1E:65:3F:59:D8:41"; //mac pc Amedeo
-const char* tello_macs[NUM_DRONI] = {"48:1c:b9:e9:24:0e", "48:1c:b9:e9:24:06"};
+const char *CONTROLLER_MAC = "DE:99:8D:44:FC:CB"; // mac quest DE:99:8D:44:FC:CB  //mac pc Andrea 28:39:26:e7:e0:03
+const char *LOGGER_MAC = "1E:65:3F:59:D8:41"; //mac pc Amedeo
+const char *TELLO_MACS[NUM_DRONI] = {"48:1c:b9:e9:24:0e", "48:1c:b9:e9:24:06"};
 
-const uint16_t controllogger_port = 58203; //porta di comunicazione col MetaQuest e col server di Node-Red
-const uint16_t tello_port = 8889; //porta per la comunicazione col Tello
+const uint16_t CONTROLLOGGER_PORT = 58203; //porta di comunicazione col MetaQuest e col server di Node-Red
+const uint16_t TELLO_PORT = 8889; //porta per la comunicazione col Tello
 
-const unsigned long infos_interval = 2000; // Intervallo per la richiesta delle informazioni di stato (2000 millisecondi)
+const unsigned long INFOS_INTERVAL = 2000; // Intervallo per la richiesta delle informazioni di stato (2000 millisecondi)
 
 char incoming_packet[DIM_PACCHETTO]; // buffer di ricezione
 char response_packet[DIM_PACCHETTO]; // buffer di invio
@@ -40,7 +40,7 @@ void setup() {
 
   // Configura l'ESP8266 come Access Point
   Serial.println("Configurazione dell'Access Point...");
-  WiFi.softAP(ssid, password); // Crea l'AP con il nome e la password specificati
+  WiFi.softAP(SSID, PASSWORD); // Crea l'AP con il nome e la password specificati
 
   // Stampa l'indirizzo IP dell'Access Point
   IPAddress ip = WiFi.softAPIP();
@@ -55,8 +55,8 @@ void setup() {
   else if (phyMode == WIFI_PHY_MODE_11N) Serial.println("802.11n");
 
   // Avvia i client udp
-  beginUDP(udp_controllogger, controllogger_port, "Controllogger");
-  beginUDP(udp_tello, tello_port, "Tello");
+  beginUDP(udp_controllogger, CONTROLLOGGER_PORT, "Controllogger");
+  beginUDP(udp_tello, TELLO_PORT, "Tello");
 }
 
 void loop() {
@@ -73,7 +73,7 @@ void receiveCommand() {
   if (readPacket(udp_controllogger)) {
     //invia il comando ai droni
     for(int i = 0; i < NUM_DRONI; i++) {
-      sendPacket(udp_tello, tello_ips[i], tello_port, incoming_packet);
+      sendPacket(udp_tello, tello_ips[i], TELLO_PORT, incoming_packet);
     }
   }
 }
@@ -86,20 +86,24 @@ void receiveResponse() {
     for(int i = 0; i < NUM_DRONI; i++) {
       // trova il drone che ha inviato la risposta, per sapere il suo id (indice)
       if (udp_tello.remoteIP() == tello_ips[i]) {
-        const char* info;
+        const char *info;
+        const char *unit;
 
         if (incoming_packet[length - 1] == 's') {
           info = "time ";
+          unit = "";
         } else if (incoming_packet[length - 1] >= '0' && incoming_packet[length - 1] <= '9') {
           info = "battery ";
+          unit = "%";
         } else {
           info = "";
+          unit = "";
         }
 
-        sprintf(response_packet, "%d: %s%s", i, info, incoming_packet);
+        sprintf(response_packet, "%d: %s%s%s", i, info, incoming_packet, unit);
         
-        sendPacket(udp_controllogger, controller_ip, controllogger_port, response_packet);
-        sendPacket(udp_controllogger, logger_ip, controllogger_port, response_packet);
+        sendPacket(udp_controllogger, controller_ip, CONTROLLOGGER_PORT, response_packet);
+        sendPacket(udp_controllogger, logger_ip, CONTROLLOGGER_PORT, response_packet);
         
         break;
       }
@@ -113,12 +117,12 @@ void sendInfoRequest() {
   //invio delle richieste sulle informazioni di batteria e tempo
   unsigned long current_millis = millis(); // Ottiene il tempo corrente
   // Verifica se è trascorso il delay
-  if (current_millis - last_time_infos >= infos_interval) {
+  if (current_millis - last_time_infos >= INFOS_INTERVAL) {
     last_time_infos = current_millis; // Aggiorna il tempo dell'ultima esecuzione
 
     for(int i = 0; i < NUM_DRONI; i++){
-      sendPacket(udp_tello, tello_ips[i], tello_port, "battery?");
-      sendPacket(udp_tello, tello_ips[i], tello_port, "time?");
+      sendPacket(udp_tello, tello_ips[i], TELLO_PORT, "battery?");
+      sendPacket(udp_tello, tello_ips[i], TELLO_PORT, "time?");
     }
   }
 }
@@ -140,7 +144,7 @@ void updateConnectedDevices() {
   }
 
   //restituisce la lista dei dispositivi connessi all'ESP
-  struct station_info* stationList = wifi_softap_get_station_info();
+  struct station_info *stationList = wifi_softap_get_station_info();
 
   // Array per memorizzare i dispositivi connessi e stamparli successivamente
   String macs[new_connected_devices];
@@ -154,13 +158,13 @@ void updateConnectedDevices() {
     macs[connected_devices] = mac;
     ips[connected_devices] = ip;
 
-    if (mac.equalsIgnoreCase(controller_mac)) {
+    if (mac.equalsIgnoreCase(CONTROLLER_MAC)) {
       controller_ip = ip;
-    } else if (mac.equalsIgnoreCase(logger_mac)) {
+    } else if (mac.equalsIgnoreCase(LOGGER_MAC)) {
       logger_ip = ip;
     } else {
       for (int i = 0; i < NUM_DRONI; i++) {
-        if (mac.equalsIgnoreCase(tello_macs[i])) {
+        if (mac.equalsIgnoreCase(TELLO_MACS[i])) {
           tello_ips[i] = ip;
           break;
         }
@@ -186,7 +190,7 @@ void updateConnectedDevices() {
 }
 
 // Funzione per convertire il MAC address in stringa
-String macToString(const uint8* mac) {
+String macToString(const uint8 *mac) {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", 
            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -195,7 +199,7 @@ String macToString(const uint8* mac) {
 
 /* Funzione per avviare un client udp sulla porta specificata. Stampa sul seriale
 il risultato dell'operazione*/
-void beginUDP(WiFiUDP& udp, const uint16_t port, const char* name) {
+void beginUDP(WiFiUDP &udp, const uint16_t port, const char *name) {
   if (udp.begin(port)) {
     Serial.printf("Porta %s avviata correttamente\n", name);
   } else {
@@ -204,14 +208,14 @@ void beginUDP(WiFiUDP& udp, const uint16_t port, const char* name) {
 }
 
 // Funzione per inviare un pacchetto udp
-void sendPacket(WiFiUDP& udp, const IPAddress& destination_ip, const uint16_t destination_port, const char* message) {
+void sendPacket(WiFiUDP &udp, const IPAddress &destination_ip, const uint16_t destination_port, const char *message) {
   udp.beginPacket(destination_ip, destination_port);
   udp.write(message);
   udp.endPacket();
 }
 
 // Funzione per leggere un pacchetto udp dalla porta specificata, se presente
-int readPacket(WiFiUDP& udp) {
+int readPacket(WiFiUDP &udp) {
   int packet_size = udp.parsePacket();
   if (packet_size) {
     //ricevi il comando
