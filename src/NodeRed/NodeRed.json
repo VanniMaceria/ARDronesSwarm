@@ -1,0 +1,1719 @@
+[
+    {
+        "id": "463a5ad1bd2107d1",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "66e8dcbe35ec989a",
+        "type": "udp in",
+        "z": "463a5ad1bd2107d1",
+        "name": "udp in",
+        "iface": "",
+        "port": "58203",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "utf8",
+        "x": 70,
+        "y": 360,
+        "wires": [
+            [
+                "1acce0ac8195eaf7",
+                "d3a38b8711218cda",
+                "b087ab4699241007"
+            ]
+        ]
+    },
+    {
+        "id": "1acce0ac8195eaf7",
+        "type": "debug",
+        "z": "463a5ad1bd2107d1",
+        "name": "debug udp",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 250,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "b26840fd05ef261a",
+        "type": "ui_template",
+        "z": "463a5ad1bd2107d1",
+        "group": "5830d1aeee15c5a8",
+        "name": "log0",
+        "order": 1,
+        "width": 8,
+        "height": 14,
+        "format": "<style>\n    .udp-message-container {\n        background-color: #555555;\n        color: white;\n        padding: 25px;\n        border-radius: 5px;\n        font-size: 18px;\n        font-weight: bold;\n        max-height: 90vh;\n        overflow-y: auto;\n    }\n\n    .udp-message {\n        margin-bottom: 15px;\n        padding: 15px;\n        background-color: #444444;\n        border-radius: 5px;\n        display: flex;\n        justify-content: space-between;\n        font-size: 12px;\n    }\n\n    .timestamp {\n        color: #aaaaaa;\n        font-size: 12px;\n        margin-right: 10px;\n    }\n\n    .message-content {\n        color: white;\n        font-size: 12px;\n        flex-grow: 1;\n        word-wrap: break-word;\n    }\n</style>\n\n<div id=\"udp-message-container-1\" class=\"udp-message-container\">\n    <!-- I messaggi UDP verranno aggiunti dinamicamente qui -->\n</div>\n\n<script>\n    (function(scope) {\n        scope.$watch('msg', function(msg) {\n            if (msg && msg.payload) {\n                var container = document.getElementById('udp-message-container-1');\n                var messageElement = document.createElement('div');\n                messageElement.classList.add('udp-message');\n\n                var timestamp = new Date().toLocaleTimeString();\n                var timestampElement = document.createElement('span');\n                timestampElement.classList.add('timestamp');\n                timestampElement.innerHTML = timestamp;\n\n                var messageContent = document.createElement('span');\n                messageContent.classList.add('message-content');\n                messageContent.innerHTML = msg.payload;\n\n                messageElement.appendChild(timestampElement);\n                messageElement.appendChild(messageContent);\n                container.insertBefore(messageElement, container.firstChild);\n            }\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 450,
+        "y": 160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dddf4eadfeeef59c",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-battery",
+        "func": "let batteryMessage = msg.payload;\n\n// Controlla se il messaggio inizia con \"battery \" e contiene un numero\nlet batteryMatch = batteryMessage.match(/^battery (\\d+)$/);\n\nif (batteryMatch && batteryMatch.length > 1) {\n    // Estrae il numero dalla stringa\n    let battery = parseInt(batteryMatch[1], 10); // Il primo gruppo della regex è il numero della batteria\n    if (!isNaN(battery)) {\n        msg.payload = battery; // Imposta il valore numerico come payload\n        return msg; // Invia il messaggio al nodo successivo (gauge)\n    } else {\n        node.warn(\"Valore della batteria non valido\");\n        return null; // Ignora il messaggio\n    }\n} else {\n    node.warn(\"Formato del messaggio non valido\");\n    return null; // Ignora il messaggio\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 360,
+        "wires": [
+            [
+                "6edf2bf73b6dae2b"
+            ]
+        ]
+    },
+    {
+        "id": "6edf2bf73b6dae2b",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "4a34eddd170c1887",
+        "order": 2,
+        "width": 8,
+        "height": 5,
+        "gtype": "gage",
+        "title": "battery status 0",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#ff2600",
+            "#e6e600",
+            "#00b500"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "diff": false,
+        "className": "",
+        "x": 680,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "d3a38b8711218cda",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-switch drone logger",
+        "func": "if (msg.payload.startsWith(\"0: \")) {\n    // Rimuove \"0: \" e invia alla funzione 0\n    msg.payload = msg.payload.replace(\"0: \", \"\").trim();\n    return [msg, null,msg,null,msg,null,msg,null,msg,null]; \n} else if (msg.payload.startsWith(\"1: \")) {\n    // Rimuove \"1: \" e invia alla funzione 1\n    msg.payload = msg.payload.replace(\"1: \", \"\").trim();\n    return [null, msg,null,msg,null,msg,null,msg,null,msg]; \n} else {\n    // Ignora altri messaggi\n    return [null, null]; // Nessun output\n}",
+        "outputs": 10,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 260,
+        "y": 360,
+        "wires": [
+            [
+                "b26840fd05ef261a"
+            ],
+            [
+                "31bd9b9e855f1e87"
+            ],
+            [
+                "04d860b7a56e0296"
+            ],
+            [
+                "8ac7d33c16def54c"
+            ],
+            [
+                "dddf4eadfeeef59c"
+            ],
+            [
+                "049dc6fc20072bf8"
+            ],
+            [
+                "d73aa8138d9e535b"
+            ],
+            [
+                "c764de52e11b5429"
+            ],
+            [
+                "1d9001cdccce5318"
+            ],
+            [
+                "25a00dc0e86dc6ef"
+            ]
+        ]
+    },
+    {
+        "id": "31bd9b9e855f1e87",
+        "type": "ui_template",
+        "z": "463a5ad1bd2107d1",
+        "group": "d2e28fa44f24cb85",
+        "name": "log1",
+        "order": 1,
+        "width": 8,
+        "height": 14,
+        "format": "<div id=\"udp-message-container-2\" class=\"udp-message-container\">\n    <!-- I messaggi UDP verranno aggiunti dinamicamente qui -->\n</div>\n\n<script>\n    (function(scope) {\n        scope.$watch('msg', function(msg) {\n            if (msg && msg.payload) {\n                var container = document.getElementById('udp-message-container-2'); // Cambiato id\n                var messageElement = document.createElement('div');\n                messageElement.classList.add('udp-message');\n\n                var timestamp = new Date().toLocaleTimeString();\n                var timestampElement = document.createElement('span');\n                timestampElement.classList.add('timestamp');\n                timestampElement.innerHTML = timestamp;\n\n                var messageContent = document.createElement('span');\n                messageContent.classList.add('message-content');\n                messageContent.innerHTML = msg.payload;\n\n                messageElement.appendChild(timestampElement);\n                messageElement.appendChild(messageContent);\n                container.insertBefore(messageElement, container.firstChild);\n            }\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 450,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "04d860b7a56e0296",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-autonomy",
+        "func": "// Parsing del messaggio\nlet message = msg.payload;\n\n// Controlla se il messaggio contiene \"time\" o \"battery\"\nif (message.startsWith(\"time\")) {\n    // Estrai il valore di tempo in secondi\n    let timeString = message.split(\" \")[1];\n    flow.set(\"time\", parseInt(timeString.replace(\"s\", \"\"), 10));\n} else if (message.startsWith(\"battery\")) {\n    // Estrai il valore di batteria\n    flow.set(\"battery\", parseInt(message.split(\" \")[1], 10));\n}\n\n// Ottieni il tempo e la batteria memorizzati\nlet time = flow.get(\"time\") || 0;\nlet battery = flow.get(\"battery\") || 100;\n\n// Calcola l'autonomia totale (100% batteria = 8 minuti)\nconst MAX_TIME = 8 * 60; // 8 minuti in secondi\nlet remainingBatteryTime = (battery / 100) * MAX_TIME;\n\n// Calcola l'autonomia residua in percentuale\nlet autonomyRemaining = ((remainingBatteryTime - time) / MAX_TIME) * 100;\n\n// Evita valori negativi\nautonomyRemaining = Math.max(autonomyRemaining, 0);\n\n// Prepara il payload per il grafico\nmsg.payload = autonomyRemaining.toFixed(2); // Autonomia in percentuale\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 260,
+        "wires": [
+            [
+                "ec804262b2c073bc"
+            ]
+        ]
+    },
+    {
+        "id": "8ac7d33c16def54c",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-autonomy",
+        "func": "// Parsing del messaggio\nlet message = msg.payload;\n\n// Controlla se il messaggio contiene \"time\" o \"battery\"\nif (message.startsWith(\"time\")) {\n    // Estrai il valore di tempo in secondi\n    let timeString = message.split(\" \")[1];\n    flow.set(\"time\", parseInt(timeString.replace(\"s\", \"\"), 10));\n} else if (message.startsWith(\"battery\")) {\n    // Estrai il valore di batteria\n    flow.set(\"battery\", parseInt(message.split(\" \")[1], 10));\n}\n\n// Ottieni il tempo e la batteria memorizzati\nlet time = flow.get(\"time\") || 0;\nlet battery = flow.get(\"battery\") || 100;\n\n// Calcola l'autonomia totale (100% batteria = 8 minuti)\nconst MAX_TIME = 8 * 60; // 8 minuti in secondi\nlet remainingBatteryTime = (battery / 100) * MAX_TIME;\n\n// Calcola l'autonomia residua in percentuale\nlet autonomyRemaining = ((remainingBatteryTime - time) / MAX_TIME) * 100;\n\n// Evita valori negativi\nautonomyRemaining = Math.max(autonomyRemaining, 0);\n\n// Prepara il payload per il grafico\nmsg.payload = autonomyRemaining.toFixed(2); // Autonomia in percentuale\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 300,
+        "wires": [
+            [
+                "5c7c678abfc565b0"
+            ]
+        ]
+    },
+    {
+        "id": "049dc6fc20072bf8",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-battery",
+        "func": "let batteryMessage = msg.payload;\n\n// Controlla se il messaggio inizia con \"battery \" e contiene un numero\nlet batteryMatch = batteryMessage.match(/^battery (\\d+)$/);\n\nif (batteryMatch && batteryMatch.length > 1) {\n    // Estrae il numero dalla stringa\n    let battery = parseInt(batteryMatch[1], 10); // Il primo gruppo della regex è il numero della batteria\n    if (!isNaN(battery)) {\n        msg.payload = battery; // Imposta il valore numerico come payload\n        return msg; // Invia il messaggio al nodo successivo (gauge)\n    } else {\n        node.warn(\"Valore della batteria non valido\");\n        return null; // Ignora il messaggio\n    }\n} else {\n    node.warn(\"Formato del messaggio non valido\");\n    return null; // Ignora il messaggio\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 400,
+        "wires": [
+            [
+                "27e932789d0c5ac4"
+            ]
+        ]
+    },
+    {
+        "id": "27e932789d0c5ac4",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "87dcc7f13f911e69",
+        "order": 2,
+        "width": 8,
+        "height": 5,
+        "gtype": "gage",
+        "title": "battery status 1",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#ff2600",
+            "#e6e600",
+            "#00b500"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "diff": false,
+        "className": "",
+        "x": 680,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "174c544d6fde8c33",
+        "type": "udp in",
+        "z": "463a5ad1bd2107d1",
+        "name": "udp in",
+        "iface": "",
+        "port": "58203",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "utf8",
+        "x": 80,
+        "y": 840,
+        "wires": [
+            [
+                "0c586a2da88a28ed"
+            ]
+        ]
+    },
+    {
+        "id": "132623ee50f5bd5c",
+        "type": "ui_template",
+        "z": "463a5ad1bd2107d1",
+        "group": "aee8eb0de16618e1",
+        "name": "log0",
+        "order": 1,
+        "width": 16,
+        "height": 7,
+        "format": "<style>\n    .udp-message-container {\n        background-color: #555555;\n        color: white;\n        padding: 25px;\n        border-radius: 5px;\n        font-size: 18px;\n        font-weight: bold;\n        max-height: 90vh;\n        overflow-y: auto;\n    }\n\n    .udp-message {\n        margin-bottom: 15px;\n        padding: 15px;\n        background-color: #444444;\n        border-radius: 5px;\n        display: flex;\n        justify-content: space-between;\n        font-size: 12px;\n    }\n\n    .timestamp {\n        color: #aaaaaa;\n        font-size: 12px;\n        margin-right: 10px;\n    }\n\n    .message-content {\n        color: white;\n        font-size: 12px;\n        flex-grow: 1;\n        word-wrap: break-word;\n    }\n</style>\n\n<div id=\"udp-message-container-1\" class=\"udp-message-container\">\n    <!-- I messaggi UDP verranno aggiunti dinamicamente qui -->\n</div>\n\n<script>\n    (function(scope) {\n        scope.$watch('msg', function(msg) {\n            if (msg && msg.payload) {\n                var container = document.getElementById('udp-message-container-1');\n                var messageElement = document.createElement('div');\n                messageElement.classList.add('udp-message');\n\n                var timestamp = new Date().toLocaleTimeString();\n                var timestampElement = document.createElement('span');\n                timestampElement.classList.add('timestamp');\n                timestampElement.innerHTML = timestamp;\n\n                var messageContent = document.createElement('span');\n                messageContent.classList.add('message-content');\n                messageContent.innerHTML = msg.payload;\n\n                messageElement.appendChild(timestampElement);\n                messageElement.appendChild(messageContent);\n                container.insertBefore(messageElement, container.firstChild);\n            }\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 450,
+        "y": 720,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9eafbb0cb164c42c",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-battery",
+        "func": "let batteryMessage = msg.payload;\n\n// Controlla se il messaggio inizia con \"battery \" e contiene un numero\nlet batteryMatch = batteryMessage.match(/^battery (\\d+)$/);\n\nif (batteryMatch && batteryMatch.length > 1) {\n    // Estrae il numero dalla stringa\n    let battery = parseInt(batteryMatch[1], 10); // Il primo gruppo della regex è il numero della batteria\n    if (!isNaN(battery)) {\n        msg.payload = battery; // Imposta il valore numerico come payload\n        return msg; // Invia il messaggio al nodo successivo (gauge)\n    } else {\n        node.warn(\"Valore della batteria non valido\");\n        return null; // Ignora il messaggio\n    }\n} else {\n    node.warn(\"Formato del messaggio non valido\");\n    return null; // Ignora il messaggio\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 840,
+        "wires": [
+            [
+                "d6d14184e63580ac"
+            ]
+        ]
+    },
+    {
+        "id": "d6d14184e63580ac",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "f9d2ea1fb7d551cb",
+        "order": 2,
+        "width": 16,
+        "height": 9,
+        "gtype": "gage",
+        "title": "battery status ",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#a96800",
+            "#ffaa00",
+            "#ffc677"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "diff": false,
+        "className": "",
+        "x": 640,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "06f2a688d66c8265",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-autonomy",
+        "func": "// Parsing del messaggio\nlet message = msg.payload;\n\n// Controlla se il messaggio contiene \"time\" o \"battery\"\nif (message.startsWith(\"time\")) {\n    // Estrai il valore di tempo in secondi\n    let timeString = message.split(\" \")[1];\n    flow.set(\"time\", parseInt(timeString.replace(\"s\", \"\"), 10));\n} else if (message.startsWith(\"battery\")) {\n    // Estrai il valore di batteria\n    flow.set(\"battery\", parseInt(message.split(\" \")[1], 10));\n}\n\n// Ottieni il tempo e la batteria memorizzati\nlet time = flow.get(\"time\") || 0;\nlet battery = flow.get(\"battery\") || 100;\n\n// Calcola l'autonomia totale (100% batteria = 8 minuti)\nconst MAX_TIME = 8 * 60; // 8 minuti in secondi\nlet remainingBatteryTime = (battery / 100) * MAX_TIME;\n\n// Calcola l'autonomia residua in percentuale\nlet autonomyRemaining = ((remainingBatteryTime - time) / MAX_TIME) * 100;\n\n// Evita valori negativi\nautonomyRemaining = Math.max(autonomyRemaining, 0);\n\n// Prepara il payload per il grafico\nmsg.payload = autonomyRemaining.toFixed(2); // Autonomia in percentuale\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 780,
+        "wires": [
+            [
+                "9a68dd0cba60d8f4"
+            ]
+        ]
+    },
+    {
+        "id": "0c586a2da88a28ed",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "drone 0",
+        "func": "if (msg.payload.startsWith(\"0: \")) {\n    // Rimuove \"0: \" e invia alla funzione 0\n    msg.payload = msg.payload.replace(\"0: \", \"\").trim();\n    return [msg,msg,msg,msg]; \n} else if (msg.payload.startsWith(\"1: \")) {\n    // Rimuove \"1: \" e invia alla funzione 1\n    msg.payload = msg.payload.replace(\"1: \", \"\").trim();\n    return [null, null,null,null]; \n} else {\n    // Ignora altri messaggi\n    return [null, null]; // Nessun output\n}",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 840,
+        "wires": [
+            [
+                "132623ee50f5bd5c"
+            ],
+            [
+                "06f2a688d66c8265"
+            ],
+            [
+                "9eafbb0cb164c42c"
+            ],
+            [
+                "4722ca2dc0a26d6a"
+            ]
+        ]
+    },
+    {
+        "id": "dc1ce402da30fcef",
+        "type": "udp in",
+        "z": "463a5ad1bd2107d1",
+        "name": "udp in",
+        "iface": "",
+        "port": "58203",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "utf8",
+        "x": 80,
+        "y": 1080,
+        "wires": [
+            [
+                "73c222714072c81e"
+            ]
+        ]
+    },
+    {
+        "id": "1ebceec55571e29c",
+        "type": "ui_template",
+        "z": "463a5ad1bd2107d1",
+        "group": "42bb7a31aa9bf6e5",
+        "name": "log1",
+        "order": 1,
+        "width": 16,
+        "height": 7,
+        "format": "<style>\n    .udp-message-container {\n        background-color: #555555;\n        color: white;\n        padding: 25px;\n        border-radius: 5px;\n        font-size: 18px;\n        font-weight: bold;\n        max-height: 90vh;\n        overflow-y: auto;\n    }\n\n    .udp-message {\n        margin-bottom: 15px;\n        padding: 15px;\n        background-color: #444444;\n        border-radius: 5px;\n        display: flex;\n        justify-content: space-between;\n        font-size: 12px;\n    }\n\n    .timestamp {\n        color: #aaaaaa;\n        font-size: 12px;\n        margin-right: 10px;\n    }\n\n    .message-content {\n        color: white;\n        font-size: 12px;\n        flex-grow: 1;\n        word-wrap: break-word;\n    }\n</style>\n\n<div id=\"udp-message-container-1\" class=\"udp-message-container\">\n    <!-- I messaggi UDP verranno aggiunti dinamicamente qui -->\n</div>\n\n<script>\n    (function(scope) {\n        scope.$watch('msg', function(msg) {\n            if (msg && msg.payload) {\n                var container = document.getElementById('udp-message-container-1');\n                var messageElement = document.createElement('div');\n                messageElement.classList.add('udp-message');\n\n                var timestamp = new Date().toLocaleTimeString();\n                var timestampElement = document.createElement('span');\n                timestampElement.classList.add('timestamp');\n                timestampElement.innerHTML = timestamp;\n\n                var messageContent = document.createElement('span');\n                messageContent.classList.add('message-content');\n                messageContent.innerHTML = msg.payload;\n\n                messageElement.appendChild(timestampElement);\n                messageElement.appendChild(messageContent);\n                container.insertBefore(messageElement, container.firstChild);\n            }\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 450,
+        "y": 960,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b13d4494e0daccd1",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-battery",
+        "func": "let batteryMessage = msg.payload;\n\n// Controlla se il messaggio inizia con \"battery \" e contiene un numero\nlet batteryMatch = batteryMessage.match(/^battery (\\d+)$/);\n\nif (batteryMatch && batteryMatch.length > 1) {\n    // Estrae il numero dalla stringa\n    let battery = parseInt(batteryMatch[1], 10); // Il primo gruppo della regex è il numero della batteria\n    if (!isNaN(battery)) {\n        msg.payload = battery; // Imposta il valore numerico come payload\n        return msg; // Invia il messaggio al nodo successivo (gauge)\n    } else {\n        node.warn(\"Valore della batteria non valido\");\n        return null; // Ignora il messaggio\n    }\n} else {\n    node.warn(\"Formato del messaggio non valido\");\n    return null; // Ignora il messaggio\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 1080,
+        "wires": [
+            [
+                "4236b3e30ae61c68"
+            ]
+        ]
+    },
+    {
+        "id": "4236b3e30ae61c68",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "7a19a63b12396d61",
+        "order": 2,
+        "width": 16,
+        "height": 7,
+        "gtype": "gage",
+        "title": "battery status ",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#2e073e",
+            "#9929bd",
+            "#f1c9fe"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "diff": false,
+        "className": "",
+        "x": 640,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "a40e34c4426ff5c5",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-autonomy",
+        "func": "// Parsing del messaggio\nlet message = msg.payload;\n\n// Controlla se il messaggio contiene \"time\" o \"battery\"\nif (message.startsWith(\"time\")) {\n    // Estrai il valore di tempo in secondi\n    let timeString = message.split(\" \")[1];\n    flow.set(\"time\", parseInt(timeString.replace(\"s\", \"\"), 10));\n} else if (message.startsWith(\"battery\")) {\n    // Estrai il valore di batteria\n    flow.set(\"battery\", parseInt(message.split(\" \")[1], 10));\n}\n\n// Ottieni il tempo e la batteria memorizzati\nlet time = flow.get(\"time\") || 0;\nlet battery = flow.get(\"battery\") || 100;\n\n// Calcola l'autonomia totale (100% batteria = 8 minuti)\nconst MAX_TIME = 8 * 60; // 8 minuti in secondi\nlet remainingBatteryTime = (battery / 100) * MAX_TIME;\n\n// Calcola l'autonomia residua in percentuale\nlet autonomyRemaining = ((remainingBatteryTime - time) / MAX_TIME) * 100;\n\n// Evita valori negativi\nautonomyRemaining = Math.max(autonomyRemaining, 0);\n\n// Prepara il payload per il grafico\nmsg.payload = autonomyRemaining.toFixed(2); // Autonomia in percentuale\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 1020,
+        "wires": [
+            [
+                "58fc2c892b2c1550"
+            ]
+        ]
+    },
+    {
+        "id": "73c222714072c81e",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "drone 1 ",
+        "func": "if (msg.payload.startsWith(\"0: \")) {\n    // Rimuove \"0: \" e invia alla funzione 0\n    msg.payload = msg.payload.replace(\"0: \", \"\").trim();\n    return [null, null, null,null]; \n} else if (msg.payload.startsWith(\"1: \")) {\n    // Rimuove \"1: \" e invia alla funzione 1\n    msg.payload = msg.payload.replace(\"1: \", \"\").trim();\n    return [msg, msg, msg, msg]; \n} else {\n    // Ignora altri messaggi\n    return [null, null]; // Nessun output\n}",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 220,
+        "y": 1080,
+        "wires": [
+            [
+                "1ebceec55571e29c"
+            ],
+            [
+                "a40e34c4426ff5c5"
+            ],
+            [
+                "b13d4494e0daccd1"
+            ],
+            [
+                "d835a74ffca67799"
+            ]
+        ]
+    },
+    {
+        "id": "770bbfe5557110fe",
+        "type": "remote-access",
+        "z": "463a5ad1bd2107d1",
+        "confignode": "3a260f9fba2192f7",
+        "name": "drone dashboard",
+        "verbose": 0,
+        "x": 180,
+        "y": 480,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "14959fabe04b4b78",
+        "type": "udp in",
+        "z": "463a5ad1bd2107d1",
+        "name": "udp in",
+        "iface": "",
+        "port": "58203",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "utf8",
+        "x": 80,
+        "y": 1340,
+        "wires": [
+            [
+                "73a9e27a66a8c32e"
+            ]
+        ]
+    },
+    {
+        "id": "310a02bd21068f8e",
+        "type": "ui_template",
+        "z": "463a5ad1bd2107d1",
+        "group": "11ad82694f5aa102",
+        "name": "log0",
+        "order": 1,
+        "width": 7,
+        "height": 4,
+        "format": "<style>\n    .udp-message-container {\n        background-color: #555555;\n        color: white;\n        padding: 25px;\n        border-radius: 5px;\n        font-size: 18px;\n        font-weight: bold;\n        max-height: 90vh;\n        overflow-y: auto;\n    }\n\n    .udp-message {\n        margin-bottom: 15px;\n        padding: 15px;\n        background-color: #444444;\n        border-radius: 5px;\n        display: flex;\n        justify-content: space-between;\n        font-size: 12px;\n    }\n\n    .timestamp {\n        color: #aaaaaa;\n        font-size: 12px;\n        margin-right: 10px;\n    }\n\n    .message-content {\n        color: white;\n        font-size: 12px;\n        flex-grow: 1;\n        word-wrap: break-word;\n    }\n</style>\n\n<div id=\"udp-message-container-1\" class=\"udp-message-container\">\n    <!-- I messaggi UDP verranno aggiunti dinamicamente qui -->\n</div>\n\n<script>\n    (function(scope) {\n        scope.$watch('msg', function(msg) {\n            if (msg && msg.payload) {\n                var container = document.getElementById('udp-message-container-1');\n                var messageElement = document.createElement('div');\n                messageElement.classList.add('udp-message');\n\n                var timestamp = new Date().toLocaleTimeString();\n                var timestampElement = document.createElement('span');\n                timestampElement.classList.add('timestamp');\n                timestampElement.innerHTML = timestamp;\n\n                var messageContent = document.createElement('span');\n                messageContent.classList.add('message-content');\n                messageContent.innerHTML = msg.payload;\n\n                messageElement.appendChild(timestampElement);\n                messageElement.appendChild(messageContent);\n                container.insertBefore(messageElement, container.firstChild);\n            }\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 460,
+        "y": 1220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3be6ffabf6345ee7",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-battery",
+        "func": "let batteryMessage = msg.payload;\n\n// Controlla se il messaggio inizia con \"battery \" e contiene un numero\nlet batteryMatch = batteryMessage.match(/^battery (\\d+)$/);\n\nif (batteryMatch && batteryMatch.length > 1) {\n    // Estrae il numero dalla stringa\n    let battery = parseInt(batteryMatch[1], 10); // Il primo gruppo della regex è il numero della batteria\n    if (!isNaN(battery)) {\n        msg.payload = battery; // Imposta il valore numerico come payload\n        return msg; // Invia il messaggio al nodo successivo (gauge)\n    } else {\n        node.warn(\"Valore della batteria non valido\");\n        return null; // Ignora il messaggio\n    }\n} else {\n    node.warn(\"Formato del messaggio non valido\");\n    return null; // Ignora il messaggio\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 1340,
+        "wires": [
+            [
+                "ae8010545c450215"
+            ]
+        ]
+    },
+    {
+        "id": "ae8010545c450215",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "f0b69bfeda141011",
+        "order": 2,
+        "width": 7,
+        "height": 3,
+        "gtype": "gage",
+        "title": "battery status ",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#583400",
+            "#ffaa00",
+            "#ffd9a8"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "diff": false,
+        "className": "",
+        "x": 670,
+        "y": 1340,
+        "wires": []
+    },
+    {
+        "id": "e99cc9ea0df92abc",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-autonomy",
+        "func": "// Parsing del messaggio\nlet message = msg.payload;\n\n// Controlla se il messaggio contiene \"time\" o \"battery\"\nif (message.startsWith(\"time\")) {\n    // Estrai il valore di tempo in secondi\n    let timeString = message.split(\" \")[1];\n    flow.set(\"time\", parseInt(timeString.replace(\"s\", \"\"), 10));\n} else if (message.startsWith(\"battery\")) {\n    // Estrai il valore di batteria\n    flow.set(\"battery\", parseInt(message.split(\" \")[1], 10));\n}\n\n// Ottieni il tempo e la batteria memorizzati\nlet time = flow.get(\"time\") || 0;\nlet battery = flow.get(\"battery\") || 100;\n\n// Calcola l'autonomia totale (100% batteria = 8 minuti)\nconst MAX_TIME = 8 * 60; // 8 minuti in secondi\nlet remainingBatteryTime = (battery / 100) * MAX_TIME;\n\n// Calcola l'autonomia residua in percentuale\nlet autonomyRemaining = ((remainingBatteryTime - time) / MAX_TIME) * 100;\n\n// Evita valori negativi\nautonomyRemaining = Math.max(autonomyRemaining, 0);\n\n// Prepara il payload per il grafico\nmsg.payload = autonomyRemaining.toFixed(2); // Autonomia in percentuale\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 1280,
+        "wires": [
+            [
+                "b004db2c032d60de"
+            ]
+        ]
+    },
+    {
+        "id": "73a9e27a66a8c32e",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "drone mobile 0",
+        "func": "if (msg.payload.startsWith(\"0: \")) {\n    // Rimuove \"0: \" e invia alla funzione 0\n    msg.payload = msg.payload.replace(\"0: \", \"\").trim();\n    return [msg,msg,msg,msg]; \n} else if (msg.payload.startsWith(\"1: \")) {\n    // Rimuove \"1: \" e invia alla funzione 1\n    msg.payload = msg.payload.replace(\"1: \", \"\").trim();\n    return [null, null,null,null]; \n} else {\n    // Ignora altri messaggi\n    return [null, null]; // Nessun output\n}",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 1340,
+        "wires": [
+            [
+                "310a02bd21068f8e"
+            ],
+            [
+                "e99cc9ea0df92abc"
+            ],
+            [
+                "3be6ffabf6345ee7"
+            ],
+            [
+                "f56dc069c21e0967"
+            ]
+        ]
+    },
+    {
+        "id": "e7c2cf7fb427db95",
+        "type": "udp in",
+        "z": "463a5ad1bd2107d1",
+        "name": "udp in",
+        "iface": "",
+        "port": "58203",
+        "ipv": "udp4",
+        "multicast": "false",
+        "group": "",
+        "datatype": "utf8",
+        "x": 80,
+        "y": 1600,
+        "wires": [
+            [
+                "c94f6b4f90da3e8e"
+            ]
+        ]
+    },
+    {
+        "id": "d7ef2cc30f0af777",
+        "type": "ui_template",
+        "z": "463a5ad1bd2107d1",
+        "group": "7681dc873b136b3c",
+        "name": "log1",
+        "order": 1,
+        "width": 7,
+        "height": 4,
+        "format": "<style>\n    .udp-message-container {\n        background-color: #555555;\n        color: white;\n        padding: 25px;\n        border-radius: 5px;\n        font-size: 18px;\n        font-weight: bold;\n        max-height: 90vh;\n        overflow-y: auto;\n    }\n\n    .udp-message {\n        margin-bottom: 15px;\n        padding: 15px;\n        background-color: #444444;\n        border-radius: 5px;\n        display: flex;\n        justify-content: space-between;\n        font-size: 12px;\n    }\n\n    .timestamp {\n        color: #aaaaaa;\n        font-size: 12px;\n        margin-right: 10px;\n    }\n\n    .message-content {\n        color: white;\n        font-size: 12px;\n        flex-grow: 1;\n        word-wrap: break-word;\n    }\n</style>\n\n<div id=\"udp-message-container-1\" class=\"udp-message-container\">\n    <!-- I messaggi UDP verranno aggiunti dinamicamente qui -->\n</div>\n\n<script>\n    (function(scope) {\n        scope.$watch('msg', function(msg) {\n            if (msg && msg.payload) {\n                var container = document.getElementById('udp-message-container-1');\n                var messageElement = document.createElement('div');\n                messageElement.classList.add('udp-message');\n\n                var timestamp = new Date().toLocaleTimeString();\n                var timestampElement = document.createElement('span');\n                timestampElement.classList.add('timestamp');\n                timestampElement.innerHTML = timestamp;\n\n                var messageContent = document.createElement('span');\n                messageContent.classList.add('message-content');\n                messageContent.innerHTML = msg.payload;\n\n                messageElement.appendChild(timestampElement);\n                messageElement.appendChild(messageContent);\n                container.insertBefore(messageElement, container.firstChild);\n            }\n        });\n    })(scope);\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 460,
+        "y": 1480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cab0a2b6e8142659",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-battery",
+        "func": "let batteryMessage = msg.payload;\n\n// Controlla se il messaggio inizia con \"battery \" e contiene un numero\nlet batteryMatch = batteryMessage.match(/^battery (\\d+)$/);\n\nif (batteryMatch && batteryMatch.length > 1) {\n    // Estrae il numero dalla stringa\n    let battery = parseInt(batteryMatch[1], 10); // Il primo gruppo della regex è il numero della batteria\n    if (!isNaN(battery)) {\n        msg.payload = battery; // Imposta il valore numerico come payload\n        return msg; // Invia il messaggio al nodo successivo (gauge)\n    } else {\n        node.warn(\"Valore della batteria non valido\");\n        return null; // Ignora il messaggio\n    }\n} else {\n    node.warn(\"Formato del messaggio non valido\");\n    return null; // Ignora il messaggio\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 1600,
+        "wires": [
+            [
+                "51b0ad6cd6ecfcf5"
+            ]
+        ]
+    },
+    {
+        "id": "51b0ad6cd6ecfcf5",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "0dddb7779d595c3a",
+        "order": 2,
+        "width": 7,
+        "height": 3,
+        "gtype": "gage",
+        "title": "battery status ",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#450e59",
+            "#9929bd",
+            "#e392fe"
+        ],
+        "seg1": "30",
+        "seg2": "70",
+        "diff": false,
+        "className": "",
+        "x": 670,
+        "y": 1600,
+        "wires": []
+    },
+    {
+        "id": "1d0447b4cbc81c31",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-autonomy",
+        "func": "// Parsing del messaggio\nlet message = msg.payload;\n\n// Controlla se il messaggio contiene \"time\" o \"battery\"\nif (message.startsWith(\"time\")) {\n    // Estrai il valore di tempo in secondi\n    let timeString = message.split(\" \")[1];\n    flow.set(\"time\", parseInt(timeString.replace(\"s\", \"\"), 10));\n} else if (message.startsWith(\"battery\")) {\n    // Estrai il valore di batteria\n    flow.set(\"battery\", parseInt(message.split(\" \")[1], 10));\n}\n\n// Ottieni il tempo e la batteria memorizzati\nlet time = flow.get(\"time\") || 0;\nlet battery = flow.get(\"battery\") || 100;\n\n// Calcola l'autonomia totale (100% batteria = 8 minuti)\nconst MAX_TIME = 8 * 60; // 8 minuti in secondi\nlet remainingBatteryTime = (battery / 100) * MAX_TIME;\n\n// Calcola l'autonomia residua in percentuale\nlet autonomyRemaining = ((remainingBatteryTime - time) / MAX_TIME) * 100;\n\n// Evita valori negativi\nautonomyRemaining = Math.max(autonomyRemaining, 0);\n\n// Prepara il payload per il grafico\nmsg.payload = autonomyRemaining.toFixed(2); // Autonomia in percentuale\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 1540,
+        "wires": [
+            [
+                "88767c65487fbb0f"
+            ]
+        ]
+    },
+    {
+        "id": "c94f6b4f90da3e8e",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "drone mobile 1",
+        "func": "if (msg.payload.startsWith(\"0: \")) {\n    // Rimuove \"0: \" e invia alla funzione 0\n    msg.payload = msg.payload.replace(\"0: \", \"\").trim();\n    return [null, null, null,null]; \n} else if (msg.payload.startsWith(\"1: \")) {\n    // Rimuove \"1: \" e invia alla funzione 1\n    msg.payload = msg.payload.replace(\"1: \", \"\").trim();\n    return [msg, msg, msg, msg]; \n} else {\n    // Ignora altri messaggi\n    return [null, null]; // Nessun output\n}",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 1600,
+        "wires": [
+            [
+                "d7ef2cc30f0af777"
+            ],
+            [
+                "1d0447b4cbc81c31"
+            ],
+            [
+                "cab0a2b6e8142659"
+            ],
+            [
+                "5b06445becac0678"
+            ]
+        ]
+    },
+    {
+        "id": "b087ab4699241007",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-csv",
+        "func": "// Ottieni il timestamp corrente in formato locale\nvar dateObj = new Date();\n\n// Ottieni l'ora locale in formato ISO senza UTC\nvar localTimestamp = dateObj.toLocaleString('it-IT', { timeZone: 'Europe/Rome' });  // Specifica il fuso orario locale\n\n// Estrai l'ID (prima del \":\")\nvar message = msg.payload;\nvar id = parseInt(message.split(\":\")[0].trim());\n\n// Estrai il resto del messaggio (dopo \":\")\nvar restOfMessage = message.split(\":\")[1].trim();\n\n// Estrai il tipo di dato e il numero separati da spazio\nvar parts = restOfMessage.split(\" \");\nvar dataType = parts[0];\nvar value = parts[1];\n\n// Crea l'output con il timestamp come primo campo\nmsg.payload = {\n    timestamp: localTimestamp,\n    id: id,\n    dataType: dataType,\n    value: value\n};\n\n// Restituisci il nuovo messaggio\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 140,
+        "wires": [
+            [
+                "64f03804004e885b"
+            ]
+        ]
+    },
+    {
+        "id": "a2eb7f1ce839d76f",
+        "type": "debug",
+        "z": "463a5ad1bd2107d1",
+        "name": "debug dataset",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "64f03804004e885b",
+        "type": "csv",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "spec": "rfc",
+        "sep": ",",
+        "hdrin": true,
+        "hdrout": "none",
+        "multi": "one",
+        "ret": "\\r",
+        "temp": "timestamp,id,dataType,value",
+        "skip": "0",
+        "strings": true,
+        "include_empty_strings": "",
+        "include_null_values": "",
+        "x": 310,
+        "y": 80,
+        "wires": [
+            [
+                "a2eb7f1ce839d76f",
+                "e46a4d1524478b84"
+            ]
+        ]
+    },
+    {
+        "id": "e46a4d1524478b84",
+        "type": "file",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "filename": "/Users/amedeoleone/Desktop/drone.csv",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 560,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5c7c678abfc565b0",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "87dcc7f13f911e69",
+        "order": 1,
+        "width": 8,
+        "height": 6,
+        "gtype": "donut",
+        "title": "autonomy1",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#ff2600",
+            "#fffb00",
+            "#00f900"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 690,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "ec804262b2c073bc",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "4a34eddd170c1887",
+        "order": 1,
+        "width": 8,
+        "height": 6,
+        "gtype": "donut",
+        "title": "autonomy0",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#ff2600",
+            "#fffb00",
+            "#00f900"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 690,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "d73aa8138d9e535b",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-time",
+        "func": "// Cerca \"time\" seguito da un numero e opzionalmente una \"s\"\nlet match = msg.payload.match(/time (\\d+)s/);\n\nif (match) {\n    // Estrae e converte il numero in un intero\n    msg.payload = parseInt(match[1], 10);\n\n    // Invia il valore al grafico\n    return msg;\n}\n\n// Se il formato non corrisponde, interrompi il flusso\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 460,
+        "wires": [
+            [
+                "bbb961f4038b1ef0"
+            ]
+        ]
+    },
+    {
+        "id": "c764de52e11b5429",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-time",
+        "func": "// Cerca \"time\" seguito da un numero e opzionalmente una \"s\"\nlet match = msg.payload.match(/time (\\d+)s/);\n\nif (match) {\n    // Estrae e converte il numero in un intero\n    msg.payload = parseInt(match[1], 10);\n\n    // Invia il valore al grafico\n    return msg;\n}\n\n// Se il formato non corrisponde, interrompi il flusso\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 490,
+        "y": 500,
+        "wires": [
+            [
+                "ab16bca9813ca5ec"
+            ]
+        ]
+    },
+    {
+        "id": "bbb961f4038b1ef0",
+        "type": "ui_chart",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "4a34eddd170c1887",
+        "order": 3,
+        "width": 8,
+        "height": 4,
+        "label": "time0",
+        "chartType": "horizontalBar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "480",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": true,
+        "colors": [
+            "#ff9300",
+            "#aec7e8",
+            "#ff9300",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 630,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ab16bca9813ca5ec",
+        "type": "ui_chart",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "87dcc7f13f911e69",
+        "order": 3,
+        "width": 8,
+        "height": 4,
+        "label": "time1",
+        "chartType": "horizontalBar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "480",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#942192",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 630,
+        "y": 500,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4722ca2dc0a26d6a",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-time",
+        "func": "// Cerca \"time\" seguito da un numero e opzionalmente una \"s\"\nlet match = msg.payload.match(/time (\\d+)s/);\n\nif (match) {\n    // Estrae e converte il numero in un intero\n    msg.payload = parseInt(match[1], 10);\n\n    // Invia il valore al grafico\n    return msg;\n}\n\n// Se il formato non corrisponde, interrompi il flusso\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 900,
+        "wires": [
+            [
+                "afc9cd36f7c58cc8"
+            ]
+        ]
+    },
+    {
+        "id": "afc9cd36f7c58cc8",
+        "type": "ui_chart",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "aee8eb0de16618e1",
+        "order": 2,
+        "width": 16,
+        "height": 9,
+        "label": "time",
+        "chartType": "horizontalBar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "480",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#ff9300",
+            "#aec7e8",
+            "#ff9300",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 590,
+        "y": 900,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9a68dd0cba60d8f4",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "f9d2ea1fb7d551cb",
+        "order": 1,
+        "width": 16,
+        "height": 7,
+        "gtype": "donut",
+        "title": "autonomy",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#583400",
+            "#ffaa00",
+            "#ffecd5"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 640,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "58fc2c892b2c1550",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "7a19a63b12396d61",
+        "order": 1,
+        "width": 16,
+        "height": 9,
+        "gtype": "donut",
+        "title": "autonomy",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#2e073e",
+            "#9929bd",
+            "#f1c9fe"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 640,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "d835a74ffca67799",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-time",
+        "func": "// Cerca \"time\" seguito da un numero e opzionalmente una \"s\"\nlet match = msg.payload.match(/time (\\d+)s/);\n\nif (match) {\n    // Estrae e converte il numero in un intero\n    msg.payload = parseInt(match[1], 10);\n\n    // Invia il valore al grafico\n    return msg;\n}\n\n// Se il formato non corrisponde, interrompi il flusso\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 1140,
+        "wires": [
+            [
+                "5c9a20014cf22766"
+            ]
+        ]
+    },
+    {
+        "id": "5c9a20014cf22766",
+        "type": "ui_chart",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "42bb7a31aa9bf6e5",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "label": "time",
+        "chartType": "horizontalBar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "480",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#9929bd",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 590,
+        "y": 1140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b004db2c032d60de",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "f0b69bfeda141011",
+        "order": 1,
+        "width": 7,
+        "height": 4,
+        "gtype": "donut",
+        "title": "autonomy",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#583400",
+            "#ffaa00",
+            "#ffd9a8"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 650,
+        "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "f56dc069c21e0967",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-time",
+        "func": "// Cerca \"time\" seguito da un numero e opzionalmente una \"s\"\nlet match = msg.payload.match(/time (\\d+)s/);\n\nif (match) {\n    // Estrae e converte il numero in un intero\n    msg.payload = parseInt(match[1], 10);\n\n    // Invia il valore al grafico\n    return msg;\n}\n\n// Se il formato non corrisponde, interrompi il flusso\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 1400,
+        "wires": [
+            [
+                "fd2b31fd85d05c25"
+            ]
+        ]
+    },
+    {
+        "id": "fd2b31fd85d05c25",
+        "type": "ui_chart",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "11ad82694f5aa102",
+        "order": 2,
+        "width": 7,
+        "height": 3,
+        "label": "time",
+        "chartType": "horizontalBar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "480",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#ff9300",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 620,
+        "y": 1400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5b06445becac0678",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-time",
+        "func": "// Cerca \"time\" seguito da un numero e opzionalmente una \"s\"\nlet match = msg.payload.match(/time (\\d+)s/);\n\nif (match) {\n    // Estrae e converte il numero in un intero\n    msg.payload = parseInt(match[1], 10);\n\n    // Invia il valore al grafico\n    return msg;\n}\n\n// Se il formato non corrisponde, interrompi il flusso\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 1660,
+        "wires": [
+            [
+                "3bb39466357780c0"
+            ]
+        ]
+    },
+    {
+        "id": "3bb39466357780c0",
+        "type": "ui_chart",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "7681dc873b136b3c",
+        "order": 2,
+        "width": 7,
+        "height": 3,
+        "label": "time",
+        "chartType": "horizontalBar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "480",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#7b219f",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 600,
+        "y": 1660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "88767c65487fbb0f",
+        "type": "ui_gauge",
+        "z": "463a5ad1bd2107d1",
+        "name": "",
+        "group": "0dddb7779d595c3a",
+        "order": 1,
+        "width": 7,
+        "height": 4,
+        "gtype": "donut",
+        "title": "autonomy",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "480",
+        "colors": [
+            "#450e59",
+            "#9929bd",
+            "#e392fe"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 650,
+        "y": 1540,
+        "wires": []
+    },
+    {
+        "id": "73b204c03acf043a",
+        "type": "ui_audio",
+        "z": "463a5ad1bd2107d1",
+        "name": "audio0",
+        "group": "4a34eddd170c1887",
+        "voice": "com.apple.voice.compact.it-IT.Alice",
+        "always": "",
+        "x": 650,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "1d9001cdccce5318",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-audio0",
+        "func": "// Estrai il valore della batteria dal pacchetto UDP\nconst message = msg.payload;\n\nif (message.startsWith(\"battery\")) {\n    const batteryLevel = parseInt(message.split(\" \")[1]);\n\n    // Controlla se il valore della batteria è inferiore al 10%\n    if (batteryLevel < 10) {\n        return { payload: \"Batteria drone 0 scarica\" };\n    }\n}\n\n// Non fare nulla se la condizione non è soddisfatta\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 560,
+        "wires": [
+            [
+                "73b204c03acf043a"
+            ]
+        ]
+    },
+    {
+        "id": "25a00dc0e86dc6ef",
+        "type": "function",
+        "z": "463a5ad1bd2107d1",
+        "name": "f-audio1",
+        "func": "// Estrai il valore della batteria dal pacchetto UDP\nconst message = msg.payload;\n\nif (message.startsWith(\"battery\")) {\n    const batteryLevel = parseInt(message.split(\" \")[1]);\n\n    // Controlla se il valore della batteria è inferiore al 10%\n    if (batteryLevel < 10) {\n        return { payload: \"Batteria drone 1 scarica\" };\n    }\n}\n\n// Non fare nulla se la condizione non è soddisfatta\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 600,
+        "wires": [
+            [
+                "e9f3ff25a6a3c5b3"
+            ]
+        ]
+    },
+    {
+        "id": "e9f3ff25a6a3c5b3",
+        "type": "ui_audio",
+        "z": "463a5ad1bd2107d1",
+        "name": "audio1",
+        "group": "87dcc7f13f911e69",
+        "voice": "com.apple.voice.compact.it-IT.Alice",
+        "always": "",
+        "x": 650,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "5830d1aeee15c5a8",
+        "type": "ui_group",
+        "name": "drone0",
+        "tab": "5c6a6d86b150872b",
+        "order": 1,
+        "disp": true,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "4a34eddd170c1887",
+        "type": "ui_group",
+        "name": "battery status 0",
+        "tab": "5c6a6d86b150872b",
+        "order": 3,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "d2e28fa44f24cb85",
+        "type": "ui_group",
+        "name": "drone 1",
+        "tab": "5c6a6d86b150872b",
+        "order": 6,
+        "disp": true,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "87dcc7f13f911e69",
+        "type": "ui_group",
+        "name": "battery status 1",
+        "tab": "5c6a6d86b150872b",
+        "order": 4,
+        "disp": false,
+        "width": "8",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "aee8eb0de16618e1",
+        "type": "ui_group",
+        "name": "Group 1",
+        "tab": "13482bd5a21eaffb",
+        "order": 1,
+        "disp": false,
+        "width": "16",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "f9d2ea1fb7d551cb",
+        "type": "ui_group",
+        "name": "Group 2",
+        "tab": "13482bd5a21eaffb",
+        "order": 2,
+        "disp": false,
+        "width": "16",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "42bb7a31aa9bf6e5",
+        "type": "ui_group",
+        "name": "Group 1",
+        "tab": "28e0dfcfdbcc663e",
+        "order": 1,
+        "disp": false,
+        "width": "16",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7a19a63b12396d61",
+        "type": "ui_group",
+        "name": "Group 2",
+        "tab": "28e0dfcfdbcc663e",
+        "order": 2,
+        "disp": false,
+        "width": "16",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "3a260f9fba2192f7",
+        "type": "remote-config",
+        "name": "Node-RED UI",
+        "host": "localhost",
+        "protocol": "http",
+        "port": "1880",
+        "baseurl": "/ui",
+        "instancehash": "pxeykupyycmz40kemetye27e8plj6vsbkpi322lfmtmgtrdjn938qbnm84f27y84",
+        "server": "nodered02.remote-red.com",
+        "region": "de"
+    },
+    {
+        "id": "11ad82694f5aa102",
+        "type": "ui_group",
+        "name": "Group 1",
+        "tab": "6f026a3e184c0c04",
+        "order": 1,
+        "disp": false,
+        "width": 7,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "f0b69bfeda141011",
+        "type": "ui_group",
+        "name": "Group 2",
+        "tab": "6f026a3e184c0c04",
+        "order": 2,
+        "disp": false,
+        "width": "7",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7681dc873b136b3c",
+        "type": "ui_group",
+        "name": "Group 1",
+        "tab": "b21aaff486b63f71",
+        "order": 1,
+        "disp": false,
+        "width": "7",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "0dddb7779d595c3a",
+        "type": "ui_group",
+        "name": "Group 2",
+        "tab": "b21aaff486b63f71",
+        "order": 2,
+        "disp": false,
+        "width": "7",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "5c6a6d86b150872b",
+        "type": "ui_tab",
+        "name": "drone logger",
+        "icon": "mi-videogame_asset",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "13482bd5a21eaffb",
+        "type": "ui_tab",
+        "name": "Drone 0",
+        "icon": "dashboard",
+        "order": 2,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "28e0dfcfdbcc663e",
+        "type": "ui_tab",
+        "name": "Drone 1",
+        "icon": "dashboard",
+        "order": 3,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "6f026a3e184c0c04",
+        "type": "ui_tab",
+        "name": "Drone0 mobile",
+        "icon": "dashboard",
+        "order": 4,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "b21aaff486b63f71",
+        "type": "ui_tab",
+        "name": "Drone1 mobile",
+        "icon": "dashboard",
+        "order": 5,
+        "disabled": false,
+        "hidden": false
+    }
+]
