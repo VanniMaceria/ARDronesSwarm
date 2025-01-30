@@ -13,7 +13,7 @@ The system is designed following the three-layer IoT architecture: Sensor Layer,
    - Provides a user-friendly interface to control the drone swarm;
    - Transmits commands to the ESP8266 module via a wireless connection.
 <p align="center">
-    <img src="https://github.com/user-attachments/assets/237a9410-ff0f-4fc8-9848-89352ae236e6" width=500 height=500>
+    <img src="https://github.com/user-attachments/assets/f2e8bfa1-41a5-4a8c-be10-136be7a79af1" width=500 height=500>
 </p>
 
 ## Contributors
