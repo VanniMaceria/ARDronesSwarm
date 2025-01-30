@@ -76,7 +76,7 @@ public class UdpSender : MonoBehaviour
             {
                 Vector2 secondaryMoveInput = secondaryMoveAction.action.ReadValue<Vector2>();
 
-                if (secondaryMoveInput.x == 0f && secondaryMoveInput.y == 0f)
+                if (secondaryMoveInput is { x: 0f, y: 0f })
                 {
                     _hasFlipped = false;
                 }

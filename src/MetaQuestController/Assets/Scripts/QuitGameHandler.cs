@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class QuitGameHandler : MonoBehaviour
 {
-    public GameObject panel;
     public GameObject exitButton;
     private DronesUIExpandible _dronesUIExpandible;
 

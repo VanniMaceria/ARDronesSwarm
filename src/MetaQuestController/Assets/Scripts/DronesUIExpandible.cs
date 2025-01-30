@@ -4,32 +4,22 @@ using UnityEngine.EventSystems;
 public class DronesUIExpandible : MonoBehaviour, IPointerClickHandler
 {
     public GameObject panel;
-    private bool _isPanelVisible = false;
+    private bool _isPanelVisible;
 
-    void Start()
+    private void Start()
     {
         SetPanelVisibility(false);
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (_isPanelVisible)
-        {
-            SetPanelVisibility(false);
-        }
-        else
-        {
-            SetPanelVisibility(true);
-        }
+        SetPanelVisibility(!_isPanelVisible);
     }
 
-    // Metodo per impostare la visibilit‡ del Panel e dei suoi figli
+    // Metodo per impostare la visibilit√† del Panel e dei suoi figli
     public void SetPanelVisibility(bool isVisible)
     {
-        if (panel != null)
-        {
-            panel.SetActive(isVisible); // Cambia lo stato attivo del Panel (e di tutti i suoi figli)
-            _isPanelVisible = isVisible; // Aggiorna lo stato del Panel
-        }
+        panel.SetActive(isVisible); // Cambia lo stato attivo del Panel (e di tutti i suoi figli)
+        _isPanelVisible = isVisible; // Aggiorna lo stato del Panel
     }
 }
