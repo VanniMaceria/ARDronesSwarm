@@ -1,3 +1,0 @@
-([('udp_test_gui',
-   '/Users/amedeoleone/PycharmProjects/udpToNodered/dist/udp_test_gui',
-   'EXECUTABLE')],)
