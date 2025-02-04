@@ -26,7 +26,11 @@ The system is designed following the three-layer IoT architecture: Sensor Layer,
 ## Final result
 https://github.com/user-attachments/assets/6fe79fb4-08f0-4afd-966f-d33ef1c3f7a9
 
+<br>
 
+> [!WARNING] 
+> **It's mandatory to change the MAC addresses of the devices in esp_master_ap.ino** <br>
+> **Unity project must have minimum android sdk version 29**
 
 ## Contributors
 <a href="https://github.com/VanniMaceria/Progetto-LabIoT/graphs/contributors">
