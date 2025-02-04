@@ -18,6 +18,16 @@ The system is designed following the three-layer IoT architecture: Sensor Layer,
     <img src="https://github.com/user-attachments/assets/f2e8bfa1-41a5-4a8c-be10-136be7a79af1" width=500 height=500>
 </p>
 
+## Useful links
+- [XR Interaction Toolkit](https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.0/manual/index.html)
+- [AR development in Unity](https://docs.unity3d.com/6000.0/Documentation/Manual/AROverview.html)
+- [Tello SDK](https://dl-cdn.ryzerobotics.com/downloads/Tello/Tello%20SDK%202.0%20User%20Guide.pdf)
+
+## Final result
+<video width="320" height="240" controls>
+  <source src="resources/video_drone.mp4" type="video/mp4">
+</video>
+
 ## Contributors
 <a href="https://github.com/VanniMaceria/Progetto-LabIoT/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=VanniMaceria/Progetto-LabIoT" />
