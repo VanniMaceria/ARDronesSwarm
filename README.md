@@ -24,9 +24,9 @@ The system is designed following the three-layer IoT architecture: Sensor Layer,
 - [Tello SDK](https://dl-cdn.ryzerobotics.com/downloads/Tello/Tello%20SDK%202.0%20User%20Guide.pdf)
 
 ## Final result
-<video width="320" height="240" controls>
-  <source src="resources/video_drone.mp4" type="video/mp4">
-</video>
+https://github.com/user-attachments/assets/6fe79fb4-08f0-4afd-966f-d33ef1c3f7a9
+
+
 
 ## Contributors
 <a href="https://github.com/VanniMaceria/Progetto-LabIoT/graphs/contributors">
