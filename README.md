@@ -1,4 +1,4 @@
-# Progetto-LabIoT
+# ARDronesSwarm
 This is an IoT project developed for the Lab of Internet of Things course at the University of Salerno. This project implements an IoT system for controlling a swarm of drones using a MetaQuest application. Commands issued through the application interface are transmitted to an ESP8266 module configured as an Access Point (AP). The ESP8266 processes and forwards these commands to the drones, enabling simultaneous and coordinated movements.
 
 ## Architecture Overview
