@@ -24,7 +24,9 @@ The system is designed following the three-layer IoT architecture: Sensor Layer,
 - [Tello SDK](https://dl-cdn.ryzerobotics.com/downloads/Tello/Tello%20SDK%202.0%20User%20Guide.pdf)
 
 ## Final result
-https://github.com/user-attachments/assets/6fe79fb4-08f0-4afd-966f-d33ef1c3f7a9
+https://github.com/user-attachments/assets/ca567be3-d893-4222-b80e-96ed3b984eaf
+
+
 
 <br>
 
