@@ -12,7 +12,7 @@
 const char *SSID = "Tello-APuntocaldo";
 const char *PASSWORD = "capebomb";
 
-const char *CONTROLLER_MAC = "DE:99:8D:44:FC:CB"; // mac quest DE:99:8D:44:FC:CB  //mac pc Andrea 28:39:26:e7:e0:03
+const char *CONTROLLER_MAC = "C0:DD:8A:44:0C:49"; // mac quest C0:DD:8A:44:0C:49  //mac pc Andrea 28:39:26:e7:e0:03
 const char *LOGGER_MAC = "1E:65:3F:59:D8:41"; //mac pc Amedeo
 const char *TELLO_MACS[NUM_DRONI] = {"48:1c:b9:e9:24:0e", "48:1c:b9:e9:24:06"};
 
